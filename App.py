@@ -9,7 +9,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. BRANDING & SPACING CSS (Entfernt alle störenden Leerfelder vor den Abschnitten)
+# 2. BRANDING, SPACING & UPLOADER-CLEAN CSS (Entfernt die verwirrenden Hilfetexte & färbt Ränder in edlem Gold)
 st.markdown("""
     <style>
     /* Hintergrund zu 100% reinweiß */
@@ -38,23 +38,13 @@ st.markdown("""
         margin-bottom: 20px;
     }
     
-    /* KORREKTUR: Entfernt die standardmäßigen Riesen-Abstände von Streamlit-Elementen */
-    .element-container, .stVerticalBlock {
-        gap: 0rem !important;
-        margin-top: 0px !important;
-        margin-bottom: 0px !important;
-        padding-top: 0px !important;
-        padding-bottom: 0px !important;
-    }
-    
     /* Karten-Optik für die Abschnitte */
     .form-card {
         background-color: #ffffff;
         padding: 24px;
         border-radius: 12px;
         border: 1px solid #edf2f7;
-        margin-top: 0px !important;
-        margin-bottom: 20px !important; /* Gleichmäßiger Abstand nach unten zur nächsten Karte */
+        margin-bottom: 20px !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
     }
     
@@ -63,17 +53,16 @@ st.markdown("""
         color: #0b4aa0;
         font-size: 1.3rem;
         font-weight: 600;
-        margin-top: 0px !important;
-        margin-bottom: 18px !important;
+        margin-bottom: 18px;
         border-bottom: 2px solid #00aeeb;
         padding-bottom: 8px;
     }
     
-    /* Felder SCHNEEWEIẞ mit dünnem, hellem grauen Rahmen */
+    /* KORREKTUR: Ränder der Eingabefelder im edlen Gold-Gelb (#fcb900) des Buttons */
     .stTextInput input, .stSelectbox div, .stNumberInput input, .stSelectbox [data-baseweb="select"] {
         background-color: #ffffff !important;
         color: #0b4aa0 !important;
-        border: 1px solid #cbd5e0 !important;
+        border: 2px solid #fcb900 !important; /* Originaler Goldton */
         border-radius: 6px !important;
         padding: 10px 14px !important;
         font-family: 'Varela Round', sans-serif !important;
@@ -81,14 +70,31 @@ st.markdown("""
         transition: all 0.2s ease-in-out !important;
     }
     
-    /* HOVER & FOKUS-EFFEKT (Feiner Rahmen leuchtet in Cyan auf) */
+    /* HOVER & FOKUS-EFFEKT (Leuchtet beim Klicken sanft im Goldton auf) */
     .stTextInput input:hover, .stNumberInput input:hover, .stSelectbox div:hover {
-        border-color: #00aeeb !important;
+        border-color: #fcb900 !important;
+        box-shadow: 0 0 8px rgba(252, 185, 0, 0.3) !important;
     }
     
     .stTextInput input:focus, .stNumberInput input:focus {
-        border-color: #00aeeb !important;
-        box-shadow: 0 0 0 3px rgba(0, 174, 235, 0.2) !important;
+        border-color: #fcb900 !important;
+        box-shadow: 0 0 12px rgba(252, 185, 0, 0.5) !important;
+    }
+
+    /* KORREKTUR: Verwirrende Hilfetexte in den Upload-Boxen unsichtbar machen */
+    .uploadedFile, .stFileUploader section div {
+        font-size: 0px !important; /* Macht den englischen Standardtext unsichtbar */
+    }
+    
+    /* Den "Browse Files"-Button in den Upload-Boxen trotzdem schön anzeigen */
+    .stFileUploader button {
+        background-color: #f8fafc !important;
+        color: #0b4aa0 !important;
+        border: 1px solid #cbd5e0 !important;
+        font-weight: bold !important;
+        font-size: 14px !important;
+        padding: 8px 16px !important;
+        border-radius: 6px !important;
     }
 
     /* Label-Texte über den Feldern */
