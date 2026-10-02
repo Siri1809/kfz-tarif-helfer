@@ -9,79 +9,118 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. BRANDING & CONTRAST CSS (Originale Deep-Blue Farben von pg-finance.de)
+# 2. PREMIUM BRANDING CSS (Minimalistisch, edel, modern - exakt wie Ihre Landingpage)
+# Wir binden hier feine, moderne Icons über das Web ein und stylen die Seite extrem clean.
 st.markdown("""
+    <!-- Importiert die feinen Lucide-Icons (modernste Vektor-Symbole) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
     <style>
-    /* Hintergrund exakt auf die originalen Dunkelblau-Töne der Website anpassen */
+    /* Globales, helles Premium-Design */
     .stApp {
-        background-color: #0d1b2a !important;
-        background-image: linear-gradient(180deg, #0d1b2a 0%, #1b263b 100%) !important;
-        color: #ffffff !important;
-        font-family: 'Varela Round', 'Varela', sans-serif !important;
+        background-color: #f8f9fa !important;
+        color: #2d3748 !important;
+        font-family: 'Varela Round', sans-serif !important;
     }
     
-    /* Eingabefelder: Weißer Hintergrund, schwarzer Text für perfekte Übersicht */
+    /* Hauptüberschrift stylen */
+    .main-title {
+        font-family: 'Varela Round', sans-serif;
+        color: #0b4aa0;
+        font-weight: 700;
+        font-size: 2.2rem;
+        text-align: center;
+        margin-top: 10px;
+        margin-bottom: 5px;
+        letter-spacing: -0.5px;
+    }
+    
+    .main-subtitle {
+        text-align: center;
+        color: #718096;
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+    }
+    
+    /* Karten-Optik für die Abschnitte (wie auf der originalen Landingpage) */
+    .form-card {
+        background-color: #ffffff;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        border: 1px solid #edf2f7;
+        margin-bottom: 25px;
+    }
+    
+    /* Moderne, feine Bereichsüberschriften */
+    .section-title {
+        color: #0b4aa0;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 2px solid #00aeeb;
+        padding-bottom: 8px;
+    }
+    
+    /* Extrem cleane, flache Eingabefelder */
     .stTextInput input, .stSelectbox div, .stNumberInput input, .stSelectbox [data-baseweb="select"] {
-        background-color: #ffffff !important;
-        color: #1a1a1a !important;
-        border: 2px solid #e0e0e0 !important;
+        background-color: #f8fafc !important;
+        color: #1a202c !important;
+        border: 1px solid #e2e8f0 !important;
         border-radius: 8px !important;
+        padding: 10px 14px !important;
         font-family: 'Varela Round', sans-serif !important;
         font-weight: 500 !important;
+        transition: all 0.2s ease-in-out !important;
     }
     
-    /* Textfarbe in Auswahllisten erzwingen (Tiefschwarz) */
-    .stSelectbox div div {
-        color: #1a1a1a !important;
-    }
-    
-    /* Fokus auf Eingabefelder leuchtet im originalen Cyan-Blau (#00aeeb) */
+    /* Fokus-Effekt im edlen originalen Cyan-Blau */
     .stTextInput input:focus, .stNumberInput input:focus {
+        background-color: #ffffff !important;
         border-color: #00aeeb !important;
-        box-shadow: 0 0 10px rgba(0, 174, 235, 0.5) !important;
+        box-shadow: 0 0 0 3px rgba(0, 174, 235, 0.15) !important;
     }
 
-    /* Überschriften in der originalen Akzentfarbe (#00aeeb) */
-    h1, h2, h3, .stSubheader {
-        color: #00aeeb !important;
-        font-family: 'Varela Round', sans-serif !important;
-        font-weight: bold;
+    /* Label-Texte fein und minimalistisch */
+    label {
+        color: #4a5568 !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+        margin-bottom: 6px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     
-    /* Label-Texte über den Feldern (z. B. "Name *") weiß & gut lesbar machen */
-    .stWidgetFormLabel, label {
-        color: #ffffff !important;
-        font-weight: bold !important;
-        font-size: 1rem !important;
-    }
-    
-    /* Den Senden-Button exakt wie auf der Website stylen (Original-Cyan #00aeeb) */
+    /* Premium Senden-Button (Exakt wie Ihre Landingpage) */
     div.stButton > button:first-child {
         background-color: #00aeeb !important;
         color: #ffffff !important;
-        border: 1px solid #ffffff !important;
-        font-weight: bold !important;
+        border: none !important;
+        font-weight: 600 !important;
         font-family: 'Varela Round', sans-serif !important;
-        border-radius: 4px !important;
-        padding: 12px 30px !important;
+        border-radius: 6px !important;
+        padding: 14px 40px !important;
         font-size: 16px !important;
+        width: 100% !important; /* Volle Breite auf dem Smartphone */
         transition: all 0.3s ease;
-        box-shadow: 0px 4px 15px rgba(0, 174, 235, 0.3);
+        box-shadow: 0 4px 14px rgba(0, 174, 235, 0.3) !important;
     }
     
-    /* Hover-Effekt des Buttons mit dem originalen Dunkelblau (#0b4aa0) */
     div.stButton > button:first-child:hover {
         background-color: #0b4aa0 !important;
-        border-color: #ffffff !important;
-        box-shadow: 0px 6px 20px rgba(11, 74, 160, 0.6) !important;
-        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(11, 74, 160, 0.4) !important;
+        transform: translateY(-1px);
     }
 
-    /* Infoboxen (Tipps) dezent dunkelblau stylen */
+    /* Moderne Tipp-Box */
     .stAlert {
-        background-color: rgba(11, 74, 160, 0.3) !important;
-        border: 1px solid #00aeeb !important;
-        color: #ffffff !important;
+        background-color: #ebf8ff !important;
+        border: 1px solid #bee3f8 !important;
+        color: #2b6cb0 !important;
+        border-radius: 8px !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -94,51 +133,63 @@ if os.path.exists(LOGO_DATEINAME):
     with col2:
         st.image(logo, use_container_width=True)
 else:
-    st.markdown("<h2 style='text-align: center; color: #00aeeb; font-family: \"Varela Round\", sans-serif;'>PATRICK GRELLNER FINANCE</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #0b4aa0; font-family: \"Varela Round\", sans-serif; letter-spacing: 1px;'>PATRICK GRELLNER FINANCE</h2>", unsafe_allow_html=True)
 
-st.markdown("<h1 style='text-align: center;'>🚗 Datenerfassung für Autoversicherung</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #e0e0e0; font-size: 1.1rem;'>Tragen Sie hier bequem Ihre Daten ein. Wir berechnen das beste Angebot für Sie.</p>", unsafe_allow_html=True)
-st.write("---")
+# Cleane Titel-Sektion
+st.markdown("<h1 class='main-title'>Datenerfassung</h1>", unsafe_allow_html=True)
+st.markdown("<p class='main-subtitle'>Schnell und sicher alle Daten für Ihre Autoversicherung einreichen</p>", unsafe_allow_html=True)
+st.write("")
 
 # 4. Sicherheits-Schranke: Die Kunden-PIN
 KORREKTE_PIN = "1234" 
 
-st.markdown("<h3 style='font-size: 1.1rem; color: #00aeeb;'>🔑 Zugangssperre</h3>", unsafe_allow_html=True)
-pin_eingabe = st.text_input("Bitte geben Sie Ihre persönliche Kunden-PIN ein, um das Formular freizuschalten:", type="password", label_visibility="collapsed")
+# Zugangsbereich in einer schicken Karte verpackt
+st.markdown('<div class="form-card">', unsafe_allow_html=True)
+st.markdown("<h3 style='font-size: 1.1rem; color: #0b4aa0; margin-top: 0;'>🔑 Zugang freischalten</h3>", unsafe_allow_html=True)
+pin_eingabe = st.text_input("Bitte geben Sie Ihre persönliche PIN ein:", type="password", label_visibility="collapsed")
+st.markdown('</div>', unsafe_allow_html=True)
 
 if pin_eingabe == KORREKTE_PIN:
-    st.success("🔓 Freigeschaltet! Sie können jetzt Ihre Daten eingeben.")
-    st.write("---")
+    st.success("🔓 Zugang erfolgreich freigeschaltet.")
+    st.write("")
 
-    # 5. Eingabemaske für den Kunden
-    st.subheader("📋 Persönliche Daten")
+    # === KARTE 1: PERSÖNLICHE DATEN ===
+    st.markdown('<div class="form-card">', unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>👤 Persönliche Daten</div>", unsafe_allow_html=True)
+    
     col1, col2 = st.columns(2)
     with col1:
-        name = st.text_input("Name *")
+        name = st.text_input("Nachname *")
         vorname = st.text_input("Vorname *")
     with col2:
         geburtsort = st.text_input("Geburtsort *")
         familienstand = st.selectbox("Familienstand", ["Ledig", "Verheiratet", "Eingetragene Lebenspartnerschaft", "Geschieden", "Verwitwet"])
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    st.subheader("🚘 Fahrzeug & Nutzung")
+    # === KARTE 2: FAHRZEUG ===
+    st.markdown('<div class="form-card">', unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>🚘 Fahrzeug & Nutzung</div>", unsafe_allow_html=True)
+    
     fahrleistung = st.number_input("Jährliche Fahrleistung (in km) *", value=10000, step=1000)
     km_stand = st.number_input("Aktueller Kilometerstand (bei älteren Fahrzeugen)", value=0, step=5000)
-    garage = st.selectbox("Abstellort des Fahrzeugs (Garage)", ["Einzel-/Doppelgarage", "Tiefgarage", "Carport", "Privatgrundstück (befriedet)", "Straße / Laternenparker"])
+    garage = st.selectbox("Abstellort des Fahrzeugs (Garage) *", ["Einzel-/Doppelgarage", "Tiefgarage", "Carport", "Privatgrundstück (befriedet)", "Straße / Laternenparker"])
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    st.subheader("📂 Dokumente hochladen")
-    st.info("💡 Tipp: Sie können Dokumente direkt mit der Smartphone-Kamera fotografieren.")
+    # === KARTE 3: DOKUMENTE ===
+    st.markdown('<div class="form-card">', unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>📂 Dokumente hochladen</div>", unsafe_allow_html=True)
+    st.info("💡 Dokumente oder Fotos können Sie ganz einfach direkt mit Ihrer Smartphone-Kamera aufnehmen.")
     
-    police = st.file_uploader("Letzte Versicherungspolice (PDF oder Foto) *", type=["pdf", "png", "jpg", "jpeg"])
-    fuehrerscheine = st.file_uploader("Führerschein Vorder- und Rückseite (aller Fahrer) *", type=["pdf", "png", "jpg", "jpeg"], accept_multiple_files=True)
-    ausweise = st.file_uploader("Personalausweis Vorder- und Rückseite (aller Fahrer) *", type=["pdf", "png", "jpg", "jpeg"], accept_multiple_files=True)
-
-    st.write("---")
+    police = st.file_uploader("Letzte Versicherungspolice *", type=["pdf", "png", "jpg", "jpeg"])
+    fuehrerscheine = st.file_uploader("Führerschein Vorder- & Rückseite (aller Fahrer) *", type=["pdf", "png", "jpg", "jpeg"], accept_multiple_files=True)
+    ausweise = st.file_uploader("Personalausweis Vorder- & Rückseite (aller Fahrer) *", type=["pdf", "png", "jpg", "jpeg"], accept_multiple_files=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # Pflichtfelder prüfen
     pflichtfelder_ausgefuellt = name and vorname and geburtsort and police and fuehrerscheine and ausweise
 
     if pflichtfelder_ausgefuellt:
-        if st.button("🚀 Daten & Dokumente sicher übertragen", type="primary"):
+        if st.button("🚀 DATEN JETZT SICHER ÜBERTRAGEN", type="primary"):
             
             # Ordnerstruktur erstellen
             ordner_name = f"Kunde_{name}_{vorname}"
@@ -174,7 +225,7 @@ Garage: {garage}
                 f.write(infotext)
 
             st.balloons()
-            st.success("🎉 Übertragung erfolgreich! Vielen Dank für Ihre Mühe. Sie können das Browserfenster jetzt schließen.")
+            st.success("🎉 Übertragung erfolgreich! Ihre Daten wurden sicher an uns übermittelt.")
             
             # Der fertige Kopierbereich für Sie
             st.write("---")
@@ -182,14 +233,14 @@ Garage: {garage}
             st.code(infotext, language="text")
 
     else:
-        st.warning("⚠️ Bitte füllen Sie alle mit * markierten Felder aus und laden Sie die erforderlichen Dokumente hoch, um das Formular absenden zu können.")
+        st.warning("⚠️ Bitte füllen Sie alle mit * markierten Felder aus und laden Sie die Dokumente hoch, um die Übertragung zu starten.")
 
-    # 6. STIMMUNGSBILD GANZ UNTEN (Für den Kunden sichtbar, solange er ausfüllt)
-    st.write("") # Abstandhalter
+    # 6. STIMMUNGSBILD GANZ UNTEN
+    st.write("") 
     THEME_BILD = "pg-finance-theme.jpg"
     if os.path.exists(THEME_BILD):
         theme_img = Image.open(THEME_BILD)
-        st.image(theme_img, use_container_width=True, caption="Ihr Partner für sichere Wege.")
+        st.image(theme_img, use_container_width=True)
 
 else:
     if pin_eingabe != "":
