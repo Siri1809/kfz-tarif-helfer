@@ -9,7 +9,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. BRANDING & FIXES CSS (Entfernt die weiße Upload-Box komplett und stellt den Selectbox-Rahmen wieder her)
+# 2. BRANDING & SEAMLESS BORDER CSS (Garantiert eine glatte, durchgezogene Optik für alle Felder)
 st.markdown("""
     <style>
     /* Hintergrund zu 100% reinweiß */
@@ -59,7 +59,7 @@ st.markdown("""
     }
     
     /* ========================================================================= */
-    /* EINHEITLICHE RÄNDER FÜR TEXTFELDER & ZAHLENFELDER                         */
+    /* EINHEITLICHE RÄNDER FÜR NORMALE EINGABEFELDER                             */
     /* ========================================================================= */
     .stTextInput input, .stNumberInput input {
         background-color: #ffffff !important;
@@ -81,47 +81,50 @@ st.markdown("""
     }
     
     /* ========================================================================= */
-    /* KORREKTUR: SELECTBOXEN BEKOMMEN IHREN RAHMEN ZURÜCK (OHNE DOPPELTE LINIE)  */
+    /* KORREKTUR: ABSOLUT DURCHGEZOGENE UND LÜCKENLOSE OPTIK FÜR SELECTBOXEN     */
     /* ========================================================================= */
+    
+    /* Wir entfernen zuerst ALLE Standardrahmen und Abstände von Streamlit für Selectboxen */
+    .stSelectbox div[role="button"], 
+    .stSelectbox div[data-baseweb="select"], 
+    .stSelectbox [data-baseweb="select"] > div {
+        border: none !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+    
+    /* Wir legen den cyan-blauen Rahmen als einheitliche, durchgehende Linie um das Hauptfeld */
     .stSelectbox [data-baseweb="select"] {
         background-color: #ffffff !important;
-        border: 2px solid #00aeeb !important; /* Der perfekte cyan-blaue Rahmen! */
+        border: 2px solid #00aeeb !important; /* Exakter, durchgezogener Rahmen auf allen 4 Seiten */
         border-radius: 6px !important;
         font-family: 'Varela Round', sans-serif !important;
         font-weight: bold !important;
         box-shadow: none !important;
         outline: none !important;
-        height: auto !important;
+        padding: 2px 4px !important; /* Sorgt für perfekten Innenabstand */
     }
     
-    /* Verhindert innere Rahmen und Schatten innerhalb der Selectboxen */
-    .stSelectbox [data-baseweb="select"] > div {
-        border: none !important;
-        background-color: transparent !important;
-        box-shadow: none !important;
-    }
-    
-    /* Textfarbe in Auswahllisten erzwingen */
-    .stSelectbox span, .stSelectbox div {
+    /* Farbe und Stil für den ausgewählten Text in der Selectbox erzwingen */
+    .stSelectbox [data-testid="stWidgetLabel"] + div div {
         color: #0b4aa0 !important;
         font-weight: bold !important;
     }
     
-    /* HOVER- & FOKUS-EFFEKTE */
+    /* HOVER- & FOKUS-EFFEKTE (Wechselt sauber zu Dunkelblau) */
     .stTextInput input:hover, .stNumberInput input:hover, .stSelectbox [data-baseweb="select"]:hover {
         border-color: #0b4aa0 !important;
     }
     
-    .stTextInput input:focus, .stNumberInput input:focus {
+    .stTextInput input:focus, .stNumberInput input:focus, .stSelectbox [data-baseweb="select"]:focus {
         border-color: #0b4aa0 !important;
         box-shadow: 0 0 0 3px rgba(11, 74, 160, 0.2) !important;
     }
 
     /* ========================================================================= */
-    /* KORREKTUR: WEIẞE GEISTER-BOX UND SCHATTEN BEIM UPLOAD KOMPLETT ENTFERNEN */
+    /* KORREKTUR: UPLOADER-BOXEN KOMPLETT RÜCKSTANDSLOS ENTFERNEN                */
     /* ========================================================================= */
-    
-    /* Macht die gesamte Uploader-Box im Hintergrund komplett unsichtbar */
     [data-testid="stFileUploader"], 
     [data-testid="stFileUploader"] > div, 
     [data-testid="stFileUploader"] section {
@@ -132,7 +135,6 @@ st.markdown("""
         padding: 0px !important;
     }
     
-    /* Entfernt den inneren gestrichelten Bereich restlos */
     [data-testid="stFileUploaderDropzone"] {
         border: none !important;
         background-color: transparent !important;
@@ -141,7 +143,6 @@ st.markdown("""
         padding: 0px !important;
     }
     
-    /* Blendet sämtliche englischen Standardtexte und Icons vollständig aus */
     [data-testid="stFileUploaderDropzone"] div, 
     [data-testid="stFileUploaderDropzone"] span,
     [data-testid="stFileUploaderDropzone"] svg {
@@ -159,7 +160,7 @@ st.markdown("""
         font-size: 15px !important;
         padding: 10px 24px !important;
         border-radius: 6px !important;
-        width: 100% !important; /* Button geht über die volle Breite */
+        width: 100% !important;
         transition: all 0.3s ease !important;
         box-shadow: 0 2px 8px rgba(0, 174, 235, 0.1) !important;
     }
