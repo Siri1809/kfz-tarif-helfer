@@ -9,7 +9,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. BRANDING & FIXES CSS (Macht die Ränder garantiert einheitlich und entfernt alle Uploader-Reste)
+# 2. BRANDING, NO-BORDER & NO-BOX-IN-BOX CSS (Löst alle doppelten Rahmen & blendet Upload-Boxen restlos aus)
 st.markdown("""
     <style>
     /* Hintergrund zu 100% reinweiß */
@@ -58,12 +58,15 @@ st.markdown("""
         padding-bottom: 8px;
     }
     
-    /* KORREKTUR: Erzwingt einen garantierten, einheitlichen 4-seitigen Rahmen um alle Felder! */
-    .stTextInput input, .stSelectbox div, .stNumberInput input, .stSelectbox [data-baseweb="select"] {
+    /* ========================================================================= */
+    /* KORREKTUR: EINHEITLICHE RÄNDER OHNE DOPPELTE BOX-IN-BOX (SELECTBOXEN)     */
+    /* ========================================================================= */
+    
+    /* Setzt NUR den äußeren Rahmen der Standard-Eingabefelder (Text & Zahlen) */
+    .stTextInput input, .stNumberInput input {
         background-color: #ffffff !important;
         color: #0b4aa0 !important;
-        border: 2px solid #00aeeb !important; /* Dicke auf 2px erhöht für perfekte Sichtbarkeit auf allen Seiten */
-        border-style: solid !important;
+        border: 2px solid #00aeeb !important;
         border-radius: 6px !important;
         padding: 10px 14px !important;
         font-family: 'Varela Round', sans-serif !important;
@@ -73,47 +76,80 @@ st.markdown("""
         transition: all 0.2s ease-in-out !important;
     }
     
-    /* KORREKTUR: Verhindert, dass Streamlit beim Fokussieren den Rahmen oben/unten abschneidet */
+    /* Verhindert doppelte Rahmen bei Text- und Zahleneingaben */
     .stTextInput div[data-baseweb="input"], .stNumberInput div[data-baseweb="input"] {
         border: none !important;
         background-color: transparent !important;
+        box-shadow: none !important;
+    }
+    
+    /* KORREKTUR für Selectboxen (Familienstand / Garage): Nur der äußere Container bekommt einen Rahmen! */
+    .stSelectbox [data-baseweb="select"] {
+        background-color: #ffffff !important;
+        border: 2px solid #00aeeb !important; /* Der einzige, einheitliche Rahmen */
+        border-radius: 6px !important;
+        font-family: 'Varela Round', sans-serif !important;
+        font-weight: bold !important;
+        box-shadow: none !important;
+    }
+    
+    /* Entfernt ALLE inneren Ränder, Rahmen und Boxen in den Selectboxen vollständig */
+    .stSelectbox div {
+        border: none !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }
+    
+    /* Setzt die Textfarbe in den Auswahlboxen auf das Marken-Blau */
+    .stSelectbox [data-testid="stWidgetLabel"] + div {
+        color: #0b4aa0 !important;
     }
     
     /* HOVER & FOKUS-EFFEKT (Einheitliches Leuchten in Dunkelblau bei Benutzung) */
-    .stTextInput input:hover, .stNumberInput input:hover, .stSelectbox div:hover {
+    .stTextInput input:hover, .stNumberInput input:hover, .stSelectbox [data-baseweb="select"]:hover {
         border-color: #0b4aa0 !important;
     }
     
-    .stTextInput input:focus, .stNumberInput input:focus {
+    .stTextInput input:focus, .stNumberInput input:focus, .stSelectbox [data-baseweb="select"]:focus {
         border-color: #0b4aa0 !important;
         box-shadow: 0 0 0 3px rgba(11, 74, 160, 0.2) !important;
     }
 
-    /* KORREKTUR: Sämtliche unsichtbaren Container und Schatten der Upload-Boxen vollständig entfernen! */
-    .stFileUploader {
+    /* ========================================================================= */
+    /* KORREKTUR: ENGERT RÄNDER UND SCHATTEN DER UPLOADER-BOXEN KOMPLETT EIN     */
+    /* ========================================================================= */
+    
+    /* Zerstört sämtliche Streamlit-Standardrahmen, weiße Hintergründe und Schatten der Uploader-Kästen */
+    [data-testid="stFileUploader"] {
         border: none !important;
         box-shadow: none !important;
         background: transparent !important;
-        padding: 0px !important;
-    }
-    
-    .stFileUploader > section {
-        border: none !important;
-        box-shadow: none !important;
         background-color: transparent !important;
         padding: 0px !important;
     }
     
-    /* Entfernt den grauen Innenbereich und die gestrichelte Linie komplett */
-    .stFileUploader [data-testid="stFileUploaderDropzone"] {
+    [data-testid="stFileUploader"] > section {
         border: none !important;
-        background: transparent !important;
         box-shadow: none !important;
+        background-color: transparent !important;
+        background: transparent !important;
         padding: 0px !important;
     }
     
-    /* Alle standardmäßigen englischen Hilfetexte und Icons ausblenden */
-    .stFileUploader [data-testid="stFileUploaderDropzone"] div {
+    [data-testid="stFileUploaderDropzone"] {
+        border: none !important;
+        box-shadow: none !important;
+        background-color: transparent !important;
+        background: transparent !important;
+        padding: 0px !important;
+    }
+    
+    /* Blendet den gesamten, unschönen grauen Bereich mit den störenden Texten restlos aus */
+    [data-testid="stFileUploaderDropzone"] > div:not(:first-child) {
+        display: none !important;
+    }
+    
+    [data-testid="stFileUploaderDropzone"] div {
         display: none !important;
     }
     
@@ -128,7 +164,7 @@ st.markdown("""
         font-size: 15px !important;
         padding: 10px 24px !important;
         border-radius: 6px !important;
-        width: 100% !important; /* Button geht über die volle Breite */
+        width: 100% !important; /* Volle Breite */
         transition: all 0.3s ease !important;
         box-shadow: 0 2px 8px rgba(0, 174, 235, 0.1) !important;
     }
@@ -231,7 +267,7 @@ if pin_eingabe == KORREKTE_PIN:
     pflichtfelder_ausgefuellt = name and vorname and geburtsort and police and fuehrerscheine and ausweise
 
     if pflichtfelder_ausgefuellt:
-        if st.button("🚀 DATEN JETZT SICHER ÜBERTRAGEN", type="primary"):
+        if st.button("DATEN JETZT SICHER ÜBERTRAGEN", type="primary"):
             
             # Ordnerstruktur erstellen
             ordner_name = f"Kunde_{name}_{vorname}"
