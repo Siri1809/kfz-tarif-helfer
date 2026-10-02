@@ -200,19 +200,6 @@ st.markdown("""
         box-shadow: 0 6px 20px rgba(11, 74, 160, 0.3) !important;
         transform: translateY(-1px);
     }
-
-    /* ========================================================================= */
-    /* NEU: KORREKTUR, UM LEERE MARKDOWN-BOXEN AUSZBLENDEN                      */
-    /* ========================================================================= */
-    [data-testid="stMarkdownContainer"] > div:first-child:has(div.form-card) {
-        display: none !important;
-    }
-
-    [data-testid="stMarkdownContainer"] p:has(+ div.form-card),
-    [data-testid="stMarkdownContainer"] p:has(div.form-card + *) {
-        display: none !important;
-    }
-
     </style>
 """, unsafe_allow_html=True)
 
@@ -224,7 +211,7 @@ if os.path.exists(LOGO_DATEINAME):
     with col2:
         st.image(logo, use_container_width=True)
 else:
-    st.markdown("<h2 style='text-align: center; color: #0b4aa0; font-family: \\"Varela Round\\", sans-serif; letter-spacing: 1px;'>PATRICK GRELLNER FINANCE</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #0b4aa0; font-family: \"Varela Round\", sans-serif; letter-spacing: 1px;'>PATRICK GRELLNER FINANCE</h2>", unsafe_allow_html=True)
 
 st.markdown("<h1 class='main-title'>Datenerfassung</h1>", unsafe_allow_html=True)
 st.markdown("<p class='main-subtitle'>Schnell und sicher alle Daten für Ihre Autoversicherung einreichen</p>", unsafe_allow_html=True)
