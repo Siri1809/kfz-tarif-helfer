@@ -9,21 +9,17 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. PREMIUM BRANDING CSS (Minimalistisch, edel, modern - exakt wie Ihre Landingpage)
-# Wir binden hier feine, moderne Icons über das Web ein und stylen die Seite extrem clean.
+# 2. BRANDING & HIGHLIGHT CSS (Interaktive Effekte wie auf Ihren Screenshots!)
 st.markdown("""
-    <!-- Importiert die feinen Lucide-Icons (modernste Vektor-Symbole) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
     <style>
-    /* Globales, helles Premium-Design */
+    /* Globaler, edler Hintergrund (Light Mode mit gutem Kontrast) */
     .stApp {
-        background-color: #f8f9fa !important;
+        background-color: #f4f6f9 !important;
         color: #2d3748 !important;
         font-family: 'Varela Round', sans-serif !important;
     }
     
-    /* Hauptüberschrift stylen */
+    /* Hauptüberschrift in Ihrer originalen blauen Markenfarbe */
     .main-title {
         font-family: 'Varela Round', sans-serif;
         color: #0b4aa0;
@@ -32,7 +28,6 @@ st.markdown("""
         text-align: center;
         margin-top: 10px;
         margin-bottom: 5px;
-        letter-spacing: -0.5px;
     }
     
     .main-subtitle {
@@ -42,7 +37,7 @@ st.markdown("""
         margin-bottom: 30px;
     }
     
-    /* Karten-Optik für die Abschnitte (wie auf der originalen Landingpage) */
+    /* Karten-Optik für die Abschnitte */
     .form-card {
         background-color: #ffffff;
         padding: 24px;
@@ -52,49 +47,50 @@ st.markdown("""
         margin-bottom: 25px;
     }
     
-    /* Moderne, feine Bereichsüberschriften */
+    /* Bereichsüberschriften */
     .section-title {
         color: #0b4aa0;
         font-size: 1.3rem;
         font-weight: 600;
         margin-bottom: 18px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
         border-bottom: 2px solid #00aeeb;
         padding-bottom: 8px;
     }
     
-    /* Extrem cleane, flache Eingabefelder */
+    /* KORREKTUR: Felder SCHNEEWEIẞ mit kontrastreichem grauen Rahmen */
     .stTextInput input, .stSelectbox div, .stNumberInput input, .stSelectbox [data-baseweb="select"] {
-        background-color: #f8fafc !important;
-        color: #1a202c !important;
-        border: 1px solid #e2e8f0 !important;
+        background-color: #ffffff !important;
+        color: #0b4aa0 !important; /* Passend zum Logo */
+        border: 2px solid #cbd5e0 !important; /* Deutlich sichtbarer Kontrast-Rahmen */
         border-radius: 8px !important;
         padding: 10px 14px !important;
         font-family: 'Varela Round', sans-serif !important;
-        font-weight: 500 !important;
-        transition: all 0.2s ease-in-out !important;
+        font-weight: bold !important;
+        transition: all 0.25s ease-in-out !important; /* Macht den Übergang seidenweich */
     }
     
-    /* Fokus-Effekt im edlen originalen Cyan-Blau */
+    /* INTERAKTIVER HOVER-EFFEKT (Wenn man mit der Maus darüber fährt) */
+    .stTextInput input:hover, .stNumberInput input:hover, .stSelectbox div:hover {
+        border-color: #00aeeb !important; /* Rahmen färbt sich in Cyan */
+        background-color: #fcfdfd !important;
+    }
+    
+    /* INTERAKTIVER FOKUS-EFFEKT (Wenn man hineinklickt - exakt wie auf Ihren Bildern!) */
     .stTextInput input:focus, .stNumberInput input:focus {
         background-color: #ffffff !important;
         border-color: #00aeeb !important;
-        box-shadow: 0 0 0 3px rgba(0, 174, 235, 0.15) !important;
+        box-shadow: 0 0 0 4px rgba(0, 174, 235, 0.25) !important; /* Blauer Leuchteffekt */
     }
 
-    /* Label-Texte fein und minimalistisch */
+    /* Label-Texte über den Feldern (Dunkelblau passend zum Logo) */
     label {
-        color: #4a5568 !important;
-        font-weight: 600 !important;
-        font-size: 0.9rem !important;
+        color: #0b4aa0 !important;
+        font-weight: bold !important;
+        font-size: 0.95rem !important;
         margin-bottom: 6px !important;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
     
-    /* Premium Senden-Button (Exakt wie Ihre Landingpage) */
+    /* Premium Senden-Button */
     div.stButton > button:first-child {
         background-color: #00aeeb !important;
         color: #ffffff !important;
@@ -104,7 +100,7 @@ st.markdown("""
         border-radius: 6px !important;
         padding: 14px 40px !important;
         font-size: 16px !important;
-        width: 100% !important; /* Volle Breite auf dem Smartphone */
+        width: 100% !important;
         transition: all 0.3s ease;
         box-shadow: 0 4px 14px rgba(0, 174, 235, 0.3) !important;
     }
@@ -113,14 +109,6 @@ st.markdown("""
         background-color: #0b4aa0 !important;
         box-shadow: 0 6px 20px rgba(11, 74, 160, 0.4) !important;
         transform: translateY(-1px);
-    }
-
-    /* Moderne Tipp-Box */
-    .stAlert {
-        background-color: #ebf8ff !important;
-        border: 1px solid #bee3f8 !important;
-        color: #2b6cb0 !important;
-        border-radius: 8px !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -135,7 +123,6 @@ if os.path.exists(LOGO_DATEINAME):
 else:
     st.markdown("<h2 style='text-align: center; color: #0b4aa0; font-family: \"Varela Round\", sans-serif; letter-spacing: 1px;'>PATRICK GRELLNER FINANCE</h2>", unsafe_allow_html=True)
 
-# Cleane Titel-Sektion
 st.markdown("<h1 class='main-title'>Datenerfassung</h1>", unsafe_allow_html=True)
 st.markdown("<p class='main-subtitle'>Schnell und sicher alle Daten für Ihre Autoversicherung einreichen</p>", unsafe_allow_html=True)
 st.write("")
@@ -143,7 +130,6 @@ st.write("")
 # 4. Sicherheits-Schranke: Die Kunden-PIN
 KORREKTE_PIN = "1234" 
 
-# Zugangsbereich in einer schicken Karte verpackt
 st.markdown('<div class="form-card">', unsafe_allow_html=True)
 st.markdown("<h3 style='font-size: 1.1rem; color: #0b4aa0; margin-top: 0;'>🔑 Zugang freischalten</h3>", unsafe_allow_html=True)
 pin_eingabe = st.text_input("Bitte geben Sie Ihre persönliche PIN ein:", type="password", label_visibility="collapsed")
