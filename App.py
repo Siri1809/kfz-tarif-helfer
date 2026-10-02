@@ -167,7 +167,7 @@ st.markdown("""
     
     .stFileUploader button:hover {
         background-color: #00aeeb !important;
-        color: #00aeeb !important;
+        color: #ffffff !important;
         box-shadow: 0 4px 12px rgba(0, 174, 235, 0.3) !important;
     }
 
