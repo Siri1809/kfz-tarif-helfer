@@ -10,7 +10,7 @@ st.set_page_config(
 )
 
 # 2. Logo einbinden (Falls vorhanden)
-LOGO_DATEINAME = "image.png"
+LOGO_DATEINAME = "pg-finance_Logo.jpg"
 if os.path.exists(LOGO_DATEINAME):
     logo = Image.open(LOGO_DATEINAME)
     # Zeigt das Logo zentriert und in einer angenehmen Breite an
