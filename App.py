@@ -9,17 +9,18 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. BRANDING & HIGHLIGHT CSS (Interaktive Effekte wie auf Ihren Screenshots!)
+# 2. BRANDING & SPACING CSS (Entfernt alle störenden Leerfelder vor den Abschnitten)
 st.markdown("""
     <style>
-    /* Globaler, edler Hintergrund (Light Mode mit gutem Kontrast) */
+    /* Hintergrund zu 100% reinweiß */
     .stApp {
-        background-color: #f4f6f9 !important;
+        background-color: #ffffff !important;
+        background-image: none !important;
         color: #2d3748 !important;
-        font-family: 'Varela Round', sans-serif !important;
+        font-family: 'Varela Round', 'Varela', sans-serif !important;
     }
     
-    /* Hauptüberschrift in Ihrer originalen blauen Markenfarbe */
+    /* Hauptüberschrift in Ihrer Markenfarbe */
     .main-title {
         font-family: 'Varela Round', sans-serif;
         color: #0b4aa0;
@@ -34,7 +35,16 @@ st.markdown("""
         text-align: center;
         color: #718096;
         font-size: 1.1rem;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
+    }
+    
+    /* KORREKTUR: Entfernt die standardmäßigen Riesen-Abstände von Streamlit-Elementen */
+    .element-container, .stVerticalBlock {
+        gap: 0rem !important;
+        margin-top: 0px !important;
+        margin-bottom: 0px !important;
+        padding-top: 0px !important;
+        padding-bottom: 0px !important;
     }
     
     /* Karten-Optik für die Abschnitte */
@@ -42,9 +52,10 @@ st.markdown("""
         background-color: #ffffff;
         padding: 24px;
         border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
         border: 1px solid #edf2f7;
-        margin-bottom: 25px;
+        margin-top: 0px !important;
+        margin-bottom: 20px !important; /* Gleichmäßiger Abstand nach unten zur nächsten Karte */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
     }
     
     /* Bereichsüberschriften */
@@ -52,37 +63,35 @@ st.markdown("""
         color: #0b4aa0;
         font-size: 1.3rem;
         font-weight: 600;
-        margin-bottom: 18px;
+        margin-top: 0px !important;
+        margin-bottom: 18px !important;
         border-bottom: 2px solid #00aeeb;
         padding-bottom: 8px;
     }
     
-    /* KORREKTUR: Felder SCHNEEWEIẞ mit kontrastreichem grauen Rahmen */
+    /* Felder SCHNEEWEIẞ mit dünnem, hellem grauen Rahmen */
     .stTextInput input, .stSelectbox div, .stNumberInput input, .stSelectbox [data-baseweb="select"] {
         background-color: #ffffff !important;
-        color: #0b4aa0 !important; /* Passend zum Logo */
-        border: 2px solid #cbd5e0 !important; /* Deutlich sichtbarer Kontrast-Rahmen */
-        border-radius: 8px !important;
+        color: #0b4aa0 !important;
+        border: 1px solid #cbd5e0 !important;
+        border-radius: 6px !important;
         padding: 10px 14px !important;
         font-family: 'Varela Round', sans-serif !important;
         font-weight: bold !important;
-        transition: all 0.25s ease-in-out !important; /* Macht den Übergang seidenweich */
+        transition: all 0.2s ease-in-out !important;
     }
     
-    /* INTERAKTIVER HOVER-EFFEKT (Wenn man mit der Maus darüber fährt) */
+    /* HOVER & FOKUS-EFFEKT (Feiner Rahmen leuchtet in Cyan auf) */
     .stTextInput input:hover, .stNumberInput input:hover, .stSelectbox div:hover {
-        border-color: #00aeeb !important; /* Rahmen färbt sich in Cyan */
-        background-color: #fcfdfd !important;
+        border-color: #00aeeb !important;
     }
     
-    /* INTERAKTIVER FOKUS-EFFEKT (Wenn man hineinklickt - exakt wie auf Ihren Bildern!) */
     .stTextInput input:focus, .stNumberInput input:focus {
-        background-color: #ffffff !important;
         border-color: #00aeeb !important;
-        box-shadow: 0 0 0 4px rgba(0, 174, 235, 0.25) !important; /* Blauer Leuchteffekt */
+        box-shadow: 0 0 0 3px rgba(0, 174, 235, 0.2) !important;
     }
 
-    /* Label-Texte über den Feldern (Dunkelblau passend zum Logo) */
+    /* Label-Texte über den Feldern */
     label {
         color: #0b4aa0 !important;
         font-weight: bold !important;
@@ -102,12 +111,13 @@ st.markdown("""
         font-size: 16px !important;
         width: 100% !important;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 14px rgba(0, 174, 235, 0.3) !important;
+        box-shadow: 0 4px 14px rgba(0, 174, 235, 0.2) !important;
+        margin-bottom: 20px !important;
     }
     
     div.stButton > button:first-child:hover {
         background-color: #0b4aa0 !important;
-        box-shadow: 0 6px 20px rgba(11, 74, 160, 0.4) !important;
+        box-shadow: 0 6px 20px rgba(11, 74, 160, 0.3) !important;
         transform: translateY(-1px);
     }
     </style>
@@ -125,19 +135,17 @@ else:
 
 st.markdown("<h1 class='main-title'>Datenerfassung</h1>", unsafe_allow_html=True)
 st.markdown("<p class='main-subtitle'>Schnell und sicher alle Daten für Ihre Autoversicherung einreichen</p>", unsafe_allow_html=True)
-st.write("")
 
 # 4. Sicherheits-Schranke: Die Kunden-PIN
 KORREKTE_PIN = "1234" 
 
 st.markdown('<div class="form-card">', unsafe_allow_html=True)
-st.markdown("<h3 style='font-size: 1.1rem; color: #0b4aa0; margin-top: 0;'>🔑 Zugang freischalten</h3>", unsafe_allow_html=True)
-pin_eingabe = st.text_input("Bitte geben Sie Ihre persönliche PIN ein:", type="password", label_visibility="collapsed")
+st.markdown("<h3 style='font-size: 1.1rem; color: #0b4aa0; margin-top: 0; margin-bottom: 12px;'>🔑 Zugang freischalten</h3>", unsafe_allow_html=True)
+pin_eingabe = st.text_input("PIN-Eingabe", type="password", label_visibility="collapsed", placeholder="Bitte PIN eingeben...")
 st.markdown('</div>', unsafe_allow_html=True)
 
 if pin_eingabe == KORREKTE_PIN:
     st.success("🔓 Zugang erfolgreich freigeschaltet.")
-    st.write("")
 
     # === KARTE 1: PERSÖNLICHE DATEN ===
     st.markdown('<div class="form-card">', unsafe_allow_html=True)
@@ -222,7 +230,6 @@ Garage: {garage}
         st.warning("⚠️ Bitte füllen Sie alle mit * markierten Felder aus und laden Sie die Dokumente hoch, um die Übertragung zu starten.")
 
     # 6. STIMMUNGSBILD GANZ UNTEN
-    st.write("") 
     THEME_BILD = "pg-finance-theme.jpg"
     if os.path.exists(THEME_BILD):
         theme_img = Image.open(THEME_BILD)
