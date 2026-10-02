@@ -10,7 +10,7 @@ st.set_page_config(
 )
 
 # 2. BRANDING & SEAMLESS BORDER CSS (Garantiert eine glatte, durchgezogene Optik für alle Felder)
-# HINWEIS: Der CSS-Teil ist komplett unverändert geblieben.
+# HINWEIS: Der CSS-Teil ist komplett unverändert zu Ihrem Original.
 st.markdown("""
     <style>
     /* Hintergrund zu 100% reinweiß */
@@ -218,17 +218,16 @@ st.markdown("<p class='main-subtitle'>Schnell und sicher alle Daten für Ihre Au
 # 4. Sicherheits-Schranke: Die Kunden-PIN
 KORREKTE_PIN = "1234" 
 
-st.markdown('<div class="form-card">&nbsp;</div>', unsafe_allow_html=True) # <<< HIER GEÄNDERT
-st.markdown("<h3 style='font-size: 1.1rem; color: #0b4aa0; margin-top: 0; margin-bottom: 12px;'>🔑 Zugang freischalten</h3>", unsafe_allow_html=True)
+# === KARTE 0: PIN-EINGABE ===
+st.markdown("<div class='form-card'><h3 style='font-size: 1.1rem; color: #0b4aa0; margin-top: 0; margin-bottom: 12px;'>🔑 Zugang freischalten</h3>", unsafe_allow_html=True)
 pin_eingabe = st.text_input("PIN-Eingabe", type="password", label_visibility="collapsed", placeholder="Bitte PIN eingeben...")
 st.markdown('</div>', unsafe_allow_html=True)
 
 if pin_eingabe == KORREKTE_PIN:
     st.success("🔓 Zugang erfolgreich freigeschaltet.")
-    # === KARTE 1: PERSÖNLICHE DATEN ===
-    st.markdown('<div class="form-card">&nbsp;</div>', unsafe_allow_html=True) # <<< HIER GEÄNDERT
-    st.markdown("<div class='section-title'>👤 Persönliche Daten</div>", unsafe_allow_html=True)
     
+    # === KARTE 1: PERSÖNLICHE DATEN ===
+    st.markdown("<div class='form-card'><div class='section-title'>👤 Persönliche Daten</div>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
         name = st.text_input("Nachname *")
@@ -237,34 +236,31 @@ if pin_eingabe == KORREKTE_PIN:
         geburtsort = st.text_input("Geburtsort *")
         familienstand = st.selectbox("Familienstand", ["Ledig", "Verheiratet", "Eingetragene Lebenspartnerschaft", "Geschieden", "Verwitwet"])
     st.markdown('</div>', unsafe_allow_html=True)
-    # === KARTE 2: FAHRZEUG ===
-    st.markdown('<div class="form-card">&nbsp;</div>', unsafe_allow_html=True) # <<< HIER GEÄNDERT
-    st.markdown("<div class='section-title'>🚘 Fahrzeug & Nutzung</div>", unsafe_allow_html=True)
     
+    # === KARTE 2: FAHRZEUG ===
+    st.markdown("<div class='form-card'><div class='section-title'>🚘 Fahrzeug & Nutzung</div>", unsafe_allow_html=True)
     fahrleistung = st.number_input("Jährliche Fahrleistung (in km) *", value=10000, step=1000)
     km_stand = st.number_input("Aktueller Kilometerstand (bei älteren Fahrzeugen)", value=0, step=5000)
     garage = st.selectbox("Abstellort des Fahrzeugs (Garage) *", ["Einzel-/Doppelgarage", "Tiefgarage", "Carport", "Privatgrundstück (befriedet)", "Straße / Laternenparker"])
     st.markdown('</div>', unsafe_allow_html=True)
+    
     # === KARTE 3: DOKUMENTE ===
-    st.markdown('<div class="form-card">&nbsp;</div>', unsafe_allow_html=True) # <<< HIER GEÄNDERT
-    st.markdown("<div class='section-title'>📂 Dokumente hochladen</div>", unsafe_allow_html=True)
+    st.markdown("<div class='form-card'><div class='section-title'>📂 Dokumente hochladen</div>", unsafe_allow_html=True)
     st.info("💡 Dokumente oder Fotos können Sie ganz einfach direkt mit Ihrer Smartphone-Kamera aufnehmen.")
     
     police = st.file_uploader("Letzte Versicherungspolice *", type=["pdf", "png", "jpg", "jpeg"])
     fuehrerscheine = st.file_uploader("Führerschein Vorder- & Rückseite (aller Fahrer) *", type=["pdf", "png", "jpg", "jpeg"], accept_multiple_files=True)
     ausweise = st.file_uploader("Personalausweis Vorder- & Rückseite (aller Fahrer) *", type=["pdf", "png", "jpg", "jpeg"], accept_multiple_files=True)
     st.markdown('</div>', unsafe_allow_html=True)
+    
     # Pflichtfelder prüfen
     pflichtfelder_ausgefuellt = name and vorname and geburtsort and police and fuehrerscheine and ausweise
     if pflichtfelder_ausgefuellt:
         if st.button("DATEN JETZT SICHER ÜBERTRAGEN", type="primary"):
-            
-            # Ordnerstruktur erstellen
             ordner_name = f"Kunde_{name}_{vorname}"
             if not os.path.exists(ordner_name):
                 os.makedirs(ordner_name)
             
-            # Dateien speichern
             if police:
                 with open(os.path.join(ordner_name, f"Police_{police.name}"), "wb") as f:
                     f.write(police.getbuffer())
@@ -275,7 +271,7 @@ if pin_eingabe == KORREKTE_PIN:
             for i, aus in enumerate(ausweise):
                 with open(os.path.join(ordner_name, f"Ausweis_{i}_{aus.name}"), "wb") as f:
                     f.write(aus.getbuffer())
-            # Formatierte Textdatei für Ihr Copy-Paste erzeugen
+            
             infotext = f"""=== KUNDENDATEN FÜR NAFI / COMPARIT ===
 Name: {name}
 Vorname: {vorname}
@@ -291,17 +287,18 @@ Garage: {garage}
             st.balloons()
             st.success("🎉 Übertragung erfolgreich! Ihre Daten wurden sicher an uns übermittelt.")
             
-            # Der fertige Kopierbereich für Sie
             st.write("---")
             st.subheader("📋 Kopierbereich für das Maklerbüro")
             st.code(infotext, language="text")
     else:
         st.warning("⚠️ Bitte füllen Sie alle mit * markierten Felder aus und laden Sie die Dokumente hoch, um die Übertragung zu starten.")
+    
     # 6. STIMMUNGSBILD GANZ UNTEN
     THEME_BILD = "pg-finance-theme.jpg"
     if os.path.exists(THEME_BILD):
         theme_img = Image.open(THEME_BILD)
         st.image(theme_img, use_container_width=True)
+
 else:
     if pin_eingabe != "":
         st.error("❌ Falsche PIN. Bitte prüfen Sie Ihre Eingabe.")
