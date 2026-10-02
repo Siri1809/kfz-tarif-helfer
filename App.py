@@ -9,7 +9,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. BRANDING, SPACING & UPLOADER-CLEAN CSS (Entfernt die verwirrenden Hilfetexte & färbt Ränder in edlem Gold)
+# 2. BRANDING & DESIGN-MAXIMUM CSS (Macht die grauen Upload-Boxen unsichtbar & Ränder Cyan-Blau)
 st.markdown("""
     <style>
     /* Hintergrund zu 100% reinweiß */
@@ -20,7 +20,7 @@ st.markdown("""
         font-family: 'Varela Round', 'Varela', sans-serif !important;
     }
     
-    /* Hauptüberschrift in Ihrer Markenfarbe */
+    /* Hauptüberschrift in Ihrer originalen blauen Markenfarbe */
     .main-title {
         font-family: 'Varela Round', sans-serif;
         color: #0b4aa0;
@@ -58,11 +58,11 @@ st.markdown("""
         padding-bottom: 8px;
     }
     
-    /* KORREKTUR: Ränder der Eingabefelder im edlen Gold-Gelb (#fcb900) des Buttons */
+    /* KORREKTUR: Ränder der Eingabefelder im originalen edlen Cyan-Blau (#00aeeb) */
     .stTextInput input, .stSelectbox div, .stNumberInput input, .stSelectbox [data-baseweb="select"] {
         background-color: #ffffff !important;
         color: #0b4aa0 !important;
-        border: 2px solid #fcb900 !important; /* Originaler Goldton */
+        border: 2px solid #00aeeb !important; /* Originales Cyan-Blau */
         border-radius: 6px !important;
         padding: 10px 14px !important;
         font-family: 'Varela Round', sans-serif !important;
@@ -70,31 +70,50 @@ st.markdown("""
         transition: all 0.2s ease-in-out !important;
     }
     
-    /* HOVER & FOKUS-EFFEKT (Leuchtet beim Klicken sanft im Goldton auf) */
+    /* HOVER & FOKUS-EFFEKT (Sanftes Aufleuchten bei Berührung) */
     .stTextInput input:hover, .stNumberInput input:hover, .stSelectbox div:hover {
-        border-color: #fcb900 !important;
-        box-shadow: 0 0 8px rgba(252, 185, 0, 0.3) !important;
+        border-color: #0b4aa0 !important; /* Wechselt beim Drübergehen zum edlen Dunkelblau */
+        box-shadow: 0 0 8px rgba(11, 74, 160, 0.2) !important;
     }
     
     .stTextInput input:focus, .stNumberInput input:focus {
-        border-color: #fcb900 !important;
-        box-shadow: 0 0 12px rgba(252, 185, 0, 0.5) !important;
+        border-color: #0b4aa0 !important;
+        box-shadow: 0 0 12px rgba(11, 74, 160, 0.4) !important;
     }
 
-    /* KORREKTUR: Verwirrende Hilfetexte in den Upload-Boxen unsichtbar machen */
-    .uploadedFile, .stFileUploader section div {
-        font-size: 0px !important; /* Macht den englischen Standardtext unsichtbar */
+    /* KORREKTUR: Die unschönen, riesigen grauen Uploader-Boxen KOMPLETT UNSICHTBAR machen! */
+    .stFileUploader section {
+        background-color: transparent !important;
+        border: none !important; /* Entfernt den gestrichelten grauen Kasten */
+        padding: 0px !important;
+        margin-top: -10px !important;
     }
     
-    /* Den "Browse Files"-Button in den Upload-Boxen trotzdem schön anzeigen */
+    /* Die verwirrenden englischen Hilfetexte restlos entfernen */
+    .stFileUploader section div {
+        display: none !important;
+    }
+    
+    /* Nur den "Browse files" Button als schicken, minimalistischen Upload-Button anzeigen */
     .stFileUploader button {
-        background-color: #f8fafc !important;
-        color: #0b4aa0 !important;
-        border: 1px solid #cbd5e0 !important;
+        display: block !important;
+        background-color: #ffffff !important;
+        color: #00aeeb !important;
+        border: 2px solid #00aeeb !important;
         font-weight: bold !important;
-        font-size: 14px !important;
-        padding: 8px 16px !important;
+        font-family: 'Varela Round', sans-serif !important;
+        font-size: 15px !important;
+        padding: 10px 24px !important;
         border-radius: 6px !important;
+        width: 100% !important; /* Button geht über die ganze Breite auf Smartphones */
+        transition: all 0.3s ease !important;
+        box-shadow: 0 2px 8px rgba(0, 174, 235, 0.1) !important;
+    }
+    
+    .stFileUploader button:hover {
+        background-color: #00aeeb !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(0, 174, 235, 0.3) !important;
     }
 
     /* Label-Texte über den Feldern */
