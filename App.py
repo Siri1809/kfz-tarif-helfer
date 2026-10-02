@@ -9,33 +9,36 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. BRANDING CSS (Farben & Hintergrundbild exakt von pg-finance.de kopiert)
+# 2. BRANDING & CONTRAST CSS (Originale Deep-Blue Farben von pg-finance.de)
 st.markdown("""
     <style>
-    /* Hintergrundbild der originalen Mobil-Landingpage einbinden */
+    /* Hintergrund exakt auf die originalen Dunkelblau-Töne der Website anpassen */
     .stApp {
-        background-image: linear-gradient(rgba(13, 27, 42, 0.85), rgba(13, 27, 42, 0.95)), 
-                          url("https://pg-finance.de/wp-content/uploads/2024/02/Background_Landing_Page_Mobil_2-1024x639.jpg");
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
+        background-color: #0d1b2a !important;
+        background-image: linear-gradient(180deg, #0d1b2a 0%, #1b263b 100%) !important;
         color: #ffffff !important;
         font-family: 'Varela Round', 'Varela', sans-serif !important;
     }
     
-    /* Eingabefelder an das dunkle Design anpassen */
-    .stTextInput input, .stSelectbox div, .stNumberInput input {
-        background-color: rgba(27, 38, 59, 0.9) !important;
-        color: #ffffff !important;
-        border: 1px solid #415a77 !important;
-        border-radius: 6px !important;
+    /* Eingabefelder: Weißer Hintergrund, schwarzer Text für perfekte Übersicht */
+    .stTextInput input, .stSelectbox div, .stNumberInput input, .stSelectbox [data-baseweb="select"] {
+        background-color: #ffffff !important;
+        color: #1a1a1a !important;
+        border: 2px solid #e0e0e0 !important;
+        border-radius: 8px !important;
         font-family: 'Varela Round', sans-serif !important;
+        font-weight: 500 !important;
+    }
+    
+    /* Textfarbe in Auswahllisten erzwingen (Tiefschwarz) */
+    .stSelectbox div div {
+        color: #1a1a1a !important;
     }
     
     /* Fokus auf Eingabefelder leuchtet im originalen Cyan-Blau (#00aeeb) */
-    .stTextInput input:focus {
+    .stTextInput input:focus, .stNumberInput input:focus {
         border-color: #00aeeb !important;
-        box-shadow: 0 0 10px #00aeeb !important;
+        box-shadow: 0 0 10px rgba(0, 174, 235, 0.5) !important;
     }
 
     /* Überschriften in der originalen Akzentfarbe (#00aeeb) */
@@ -45,7 +48,14 @@ st.markdown("""
         font-weight: bold;
     }
     
-    /* Den Senden-Button exakt wie auf der Website stylen */
+    /* Label-Texte über den Feldern (z. B. "Name *") weiß & gut lesbar machen */
+    .stWidgetFormLabel, label {
+        color: #ffffff !important;
+        font-weight: bold !important;
+        font-size: 1rem !important;
+    }
+    
+    /* Den Senden-Button exakt wie auf der Website stylen (Original-Cyan #00aeeb) */
     div.stButton > button:first-child {
         background-color: #00aeeb !important;
         color: #ffffff !important;
@@ -69,7 +79,7 @@ st.markdown("""
 
     /* Infoboxen (Tipps) dezent dunkelblau stylen */
     .stAlert {
-        background-color: rgba(11, 74, 160, 0.2) !important;
+        background-color: rgba(11, 74, 160, 0.3) !important;
         border: 1px solid #00aeeb !important;
         color: #ffffff !important;
     }
@@ -179,7 +189,6 @@ Garage: {garage}
     THEME_BILD = "pg-finance-theme.jpg"
     if os.path.exists(THEME_BILD):
         theme_img = Image.open(THEME_BILD)
-        # Zeigt das Auto-Bild zentriert ganz unten an
         st.image(theme_img, use_container_width=True, caption="Ihr Partner für sichere Wege.")
 
 else:
