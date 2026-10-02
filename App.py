@@ -105,6 +105,27 @@ st.markdown("""
     [data-testid="stFileUploader"] button:hover {
         background-color: #0b4aa0;
     }
+     /* Premium Senden-Button */
+    div.stButton > button:first-child {
+        background-color: #00aeeb !important;
+        color: #ffffff !important;
+        border: none !important;
+        font-weight: 600 !important;
+        font-family: 'Varela Round', sans-serif !important;
+        border-radius: 6px !important;
+        padding: 14px 40px !important;
+        font-size: 16px !important;
+        width: 100% !important;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 14px rgba(0, 174, 235, 0.2) !important;
+        margin-bottom: 20px !important;
+    }
+    
+    div.stButton > button:first-child:hover {
+        background-color: #0b4aa0 !important;
+        box-shadow: 0 6px 20px rgba(11, 74, 160, 0.3) !important;
+        transform: translateY(-1px);
+    }
 
     /* --- SUB-HEADER FÜR DYNAMISCHE FAHRER --- */
     .driver-header {
@@ -218,7 +239,12 @@ if pin_eingabe == KORREKTE_PIN:
     else:
         st.warning("⚠️ Bitte füllen Sie alle mit * markierten Felder aus und laden Sie die Pflicht-Dokumente hoch, um die Übertragung zu starten.")
 
+    # 6. STIMMUNGSBILD GANZ UNTEN (WIEDER EINGEFÜGT)
+    THEME_BILD = "pg-finance-theme.jpg"
+    if os.path.exists(THEME_BILD):
+        theme_img = Image.open(THEME_BILD)
+        st.image(theme_img, use_container_width=True)
+
 else:
     if pin_eingabe != "":
         st.error("❌ Falsche PIN. Bitte prüfen Sie Ihre Eingabe.")
-
