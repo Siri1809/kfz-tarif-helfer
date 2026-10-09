@@ -9,7 +9,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. BRANDING & CLEAN DESIGN CSS (Optimiert für nebeneinander liegende Uploads)
+# 2. BRANDING, SEAMLESS CARD & SPACING CSS
 st.markdown("""
     <style>
     /* Hintergrund zu 100% reinweiß */
@@ -20,7 +20,7 @@ st.markdown("""
         font-family: 'Varela Round', 'Varela', sans-serif !important;
     }
     
-    /* Hauptüberschrift in Ihrer Markenfarbe */
+    /* Hauptüberschrift in Ihrer originalen blauen Markenfarbe */
     .main-title {
         font-family: 'Varela Round', sans-serif;
         color: #0b4aa0;
@@ -38,25 +38,28 @@ st.markdown("""
         margin-bottom: 20px;
     }
     
-    /* Karten-Optik für die Abschnitte */
+    /* Karten-Optik für die Abschnitte (Mit extrem sauberer Ausrichtung) */
     .form-card {
         background-color: #ffffff;
         padding: 24px;
         border-radius: 12px;
         border: 1px solid #edf2f7;
-        margin-bottom: 20px !important;
+        margin-top: 0px !important;
+        margin-bottom: 25px !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
     }
     
-    /* Bereichsüberschriften DIREKT IN DEN KARTEN integriert */
-    .section-title {
-        color: #0b4aa0;
-        font-size: 1.3rem;
-        font-weight: 600;
+    /* KORREKTUR: Erzwingt, dass die HTML-Überschriften in den Karten perfekt aussehen */
+    .card-header {
+        color: #0b4aa0 !important;
+        font-size: 1.35rem !important;
+        font-weight: bold !important;
+        font-family: 'Varela Round', sans-serif !important;
         margin-top: 0px !important;
-        margin-bottom: 18px;
-        border-bottom: 2px solid #00aeeb;
-        padding-bottom: 8px;
+        margin-bottom: 20px !important;
+        border-bottom: 2px solid #00aeeb !important;
+        padding-bottom: 8px !important;
+        display: block !important;
     }
     
     /* Ränder der Eingabefelder im originalen edlen Cyan-Blau (#00aeeb) */
@@ -148,10 +151,6 @@ st.markdown("""
         border-radius: 6px !important;
         box-shadow: 0 2px 6px rgba(0, 174, 235, 0.2) !important;
     }
-    
-    .stFileUploader button:hover {
-        background-color: #0b4aa0 !important;
-    }
 
     /* Info-Boxen Text */
     .stAlert p, .stAlert span, .stAlert div {
@@ -215,9 +214,11 @@ st.markdown('</div>', unsafe_allow_html=True)
 if pin_eingabe == KORREKTE_PIN:
     st.success("🔓 Zugang erfolgreich freigeschaltet.")
 
-    # === KARTE 1: PERSÖNLICHE DATEN (Überschrift im weißen Kasten integriert) ===
-    st.markdown('<div class="form-card">', unsafe_allow_html=True)
-    st.markdown("<div class='section-title'>👤 Persönliche Daten</div>", unsafe_allow_html=True)
+    # === KARTE 1: PERSÖNLICHE DATEN (Überschrift als HTML direkt in der Karte!) ===
+    st.markdown("""
+        <div class="form-card">
+            <span class="card-header">👤 Persönliche Daten</span>
+    """, unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     with col1:
@@ -228,9 +229,11 @@ if pin_eingabe == KORREKTE_PIN:
         familienstand = st.selectbox("Familienstand", ["Ledig", "Verheiratet", "Eingetragene Lebenspartnerschaft", "Geschieden", "Verwitwet"])
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # === KARTE 2: FAHRZEUG (Inklusive Fahrzeugschein-Upload & integrierter Überschrift) ===
-    st.markdown('<div class="form-card">', unsafe_allow_html=True)
-    st.markdown("<div class='section-title'>🚘 Fahrzeug & Nutzung</div>", unsafe_allow_html=True)
+    # === KARTE 2: FAHRZEUG (Überschrift als HTML direkt in der Karte!) ===
+    st.markdown("""
+        <div class="form-card">
+            <span class="card-header">🚘 Fahrzeug & Nutzung</span>
+    """, unsafe_allow_html=True)
     
     col_fz1, col_col2 = st.columns(2)
     with col_fz1:
@@ -243,9 +246,11 @@ if pin_eingabe == KORREKTE_PIN:
     fahrzeugschein = st.file_uploader("Fahrzeugschein hier hochladen/fotografieren *", type=["pdf", "png", "jpg", "jpeg"])
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # === KARTE 3: DOKUMENTE (Mit nebeneinander liegenden Feldern & integrierter Überschrift) ===
-    st.markdown('<div class="form-card">', unsafe_allow_html=True)
-    st.markdown("<div class='section-title'>📂 Dokumente hochladen</div>", unsafe_allow_html=True)
+    # === KARTE 3: DOKUMENTE (Überschrift als HTML direkt in der Karte!) ===
+    st.markdown("""
+        <div class="form-card">
+            <span class="card-header">📂 Dokumente hochladen</span>
+    """, unsafe_allow_html=True)
     st.info("💡 Dokumente oder Fotos können Sie ganz einfach direkt mit Ihrer Smartphone-Kamera aufnehmen.")
     
     st.write("") # Abstandhalter
@@ -269,7 +274,7 @@ if pin_eingabe == KORREKTE_PIN:
         
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Pflichtfelder prüfen (Fahrzeugschein, Police, FS vorn/hinten, Ausweis vorn müssen ausgefüllt sein!)
+    # Pflichtfelder prüfen
     pflichtfelder_ausgefuellt = (name and vorname and geburtsort and fahrzeugschein and police 
                                  and fs_vorderseite and fs_rueckseite and ausweis_vorderseite)
 
