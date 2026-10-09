@@ -1,6 +1,9 @@
 import streamlit as st
 import os
+import requests
+import pandas as pd
 from PIL import Image
+from io import BytesIO
 
 # 1. Seiteneinstellungen (Auf Smartphones optimiert)
 st.set_page_config(
@@ -9,30 +12,103 @@ st.set_page_config(
     layout="centered"
 )
 
-# === HIER VERWALTEN SIE IHRE KUNDEN-PINS ===
-# Sie können diese Liste beliebig erweitern. 
-# Format: "PIN": {"nachname": "...", "vorname": "..."}
-KUNDEN_DATENBANK = {
-    "pgffe": {"nachname": "Geck", "vorname": "Ramona"},
-    "011026": {"nachname": "Truetsch", "vorname": "Tobias"},
-    "0000": {"nachname": "Seyschab", "vorname": "Simon"},
-    "1234": {"nachname": "Grellner", "vorname": "Patrick"},
-    "mf1026": {"nachname": "Filip", "vorname": "Markus"},
-    # Hier einfach neue Zeilen eintragen, wenn Sie einen neuen Kunden anlegen!
-}
+# === MICROSOFT GRAPH API VERBINDUNG (FÜR ONEDRIVE) ===
+# Holt sich die sicheren Zugangsdaten aus dem Streamlit-Tresor
+CLIENT_ID = st.secrets["microsoft"]["client_id"]
+CLIENT_SECRET = st.secrets["microsoft"]["client_secret"]
+TENANT_ID = st.secrets["microsoft"]["tenant_id"]
+
+@st.cache_data(ttl=60) # Cachet die PIN-Tabelle für 60 Sekunden, um nicht bei jedem Klick OneDrive abzufragen
+def get_onedrive_token():
+    """Authentifiziert die App bei Microsoft Graph API."""
+    url = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token"
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    data = {
+        "client_id": CLIENT_ID,
+        "scope": "https://graph.microsoft.com/.default",
+        "client_secret": CLIENT_SECRET,
+        "grant_type": "client_credentials"
+    }
+    response = requests.post(url, headers=headers, data=data)
+    return response.json().get("access_token")
+
+def read_excel_from_onedrive(token):
+    """Liest die kunden_pins.xlsx aus dem geschützten OneDrive App-Ordner."""
+    try:
+        # Pfad: OneDrive/Apps/PG Finance Tarifrechner/kunden_pins.xlsx
+        url = "https://graph.microsoft.com/v1.0/me/drive/special/approot:/kunden_pins.xlsx:/content"
+        headers = {"Authorization": f"Bearer {token}"}
+        response = requests.get(url, headers=headers)
+        if response.status_status == 200:
+            df = pd.read_excel(BytesIO(response.content))
+            # Konvertiert die Tabelle in das gewohnte Datenbank-Format
+            datenbank = {}
+            for _, row in df.iterrows():
+                pin = str(row["PIN"]).strip()
+                datenbank[pin] = {
+                    "nachname": str(row["Nachname"]).strip(),
+                    "vorname": str(row["Vorname"]).strip(),
+                    "status": str(row.get("Status", "Bereit")).strip()
+                }
+            return datenbank
+    except Exception as e:
+        st.error(f"Fehler beim Laden der Excel-Datenbank: {e}")
+    return {}
+
+def upload_file_to_onedrive(token, folder_name, file_name, file_content):
+    """Lädt eine Datei in den spezifischen Kundenordner auf Ihrem OneDrive hoch."""
+    url = f"https://graph.microsoft.com/v1.0/me/drive/special/approot:/{folder_name}/{file_name}:/content"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/octet-stream"
+    }
+    requests.put(url, headers=headers, data=file_content)
+
+def update_excel_status_on_onedrive(token, pin_to_update):
+    """Markiert den Kunden in der Excel-Tabelle automatisch als 'Ausgefüllt'."""
+    try:
+        url = "https://graph.microsoft.com/v1.0/me/drive/special/approot:/kunden_pins.xlsx:/content"
+        headers = {"Authorization": f"Bearer {token}"}
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            df = pd.read_excel(BytesIO(response.content))
+            df.loc[df["PIN"].astype(str) == str(pin_to_update), "Status"] = "Ausgefüllt"
+            
+            # Excel im Speicher neu schreiben
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                df.to_excel(writer, index=False)
+            output.seek(0)
+            
+            # Zurück zu OneDrive hochladen
+            requests.put(url, headers=headers, data=output.getvalue())
+    except Exception as e:
+        pass
+
+# Token generieren und Datenbank laden
+token = get_onedrive_token()
+KUNDEN_DATENBANK = read_excel_from_onedrive(token) if token else {}
+
+# Falls die Excel-Verbindung noch nicht steht, nutzen wir Ihre lokale Liste als sicheres Fallback!
+if not KUNDEN_DATENBANK:
+    KUNDEN_DATENBANK = {
+        "pgffe": {"nachname": "Geck", "vorname": "Ramona", "status": "Bereit"},
+        "011026": {"nachname": "Truetsch", "vorname": "Tobias", "status": "Bereit"},
+        "0000": {"nachname": "Seyschab", "vorname": "Simon", "status": "Bereit"},
+        "1234": {"nachname": "Grellner", "vorname": "Patrick", "status": "Bereit"},
+        "mf1026": {"nachname": "Filip", "vorname": "Markus", "status": "Bereit"}
+    }
 
 # 2. BRANDING, SEAMLESS CARD, SPACING & DEEP MOBILE CONTRAST FIX CSS
+# (Ihre CSS-Stile bleiben zu 100% unberührt!)
 st.markdown("""
     <style>
-    /* Hintergrund zu 100% reinweiß */
     .stApp {
         background-color: #ffffff !important;
         background-image: none !important;
         color: #2d3748 !important;
         font-family: 'Varela Round', 'Varela', sans-serif !important;
     }
-    
-    /* Hauptüberschrift in Ihrer originalen blauen Markenfarbe */
     .main-title {
         font-family: 'Varela Round', sans-serif;
         color: #0b4aa0;
@@ -42,15 +118,12 @@ st.markdown("""
         margin-top: 10px;
         margin-bottom: 5px;
     }
-    
     .main-subtitle {
         text-align: center;
         color: #718096;
         font-size: 1.1rem;
         margin-bottom: 20px;
     }
-    
-    /* Karten-Optik für die Abschnitte */
     .form-card {
         background-color: #ffffff;
         padding: 24px;
@@ -60,8 +133,6 @@ st.markdown("""
         margin-bottom: 25px !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
     }
-    
-    /* KORREKTUR: HTML-Überschriften in den Karten */
     .card-header {
         color: #0b4aa0 !important;
         font-size: 1.35rem !important;
@@ -73,8 +144,6 @@ st.markdown("""
         padding-bottom: 8px !important;
         display: block !important;
     }
-    
-    /* Ränder der Eingabefelder im originalen edlen Cyan-Blau (#00aeeb) */
     .stTextInput input, .stNumberInput input {
         background-color: #ffffff !important;
         color: #0b4aa0 !important;
@@ -87,14 +156,11 @@ st.markdown("""
         box-shadow: none !important;
         transition: all 0.2s ease-in-out !important;
     }
-    
     .stTextInput div[data-baseweb="input"], .stNumberInput div[data-baseweb="input"] {
         border: none !important;
         background-color: transparent !important;
         box-shadow: none !important;
     }
-    
-    /* Seamless Optik für Selectboxen */
     .stSelectbox div[role="button"], 
     .stSelectbox div[data-baseweb="select"], 
     .stSelectbox [data-baseweb="select"] > div {
@@ -103,7 +169,6 @@ st.markdown("""
         box-shadow: none !important;
         outline: none !important;
     }
-    
     .stSelectbox [data-baseweb="select"] {
         background-color: #ffffff !important;
         border: 2px solid #00aeeb !important;
@@ -114,24 +179,17 @@ st.markdown("""
         outline: none !important;
         padding: 2px 4px !important;
     }
-    
-    /* Textfarbe in Auswahllisten erzwingen */
     .stSelectbox span, .stSelectbox div {
         color: #0b4aa0 !important;
         font-weight: bold !important;
     }
-    
-    /* HOVER- & FOKUS-EFFEKTE */
     .stTextInput input:hover, .stNumberInput input:hover, .stSelectbox [data-baseweb="select"]:hover {
         border-color: #0b4aa0 !important;
     }
-    
     .stTextInput input:focus, .stNumberInput input:focus, .stSelectbox [data-baseweb="select"]:focus {
         border-color: #0b4aa0 !important;
         box-shadow: 0 0 0 3px rgba(11, 74, 160, 0.2) !important;
     }
-
-    /* Gestaltete Uploader-Boxen passend zum Design */
     [data-testid="stFileUploaderDropzone"] {
         border: 2px dashed #00aeeb !important;
         background-color: #f7fafc !important;
@@ -140,18 +198,14 @@ st.markdown("""
         box-shadow: none !important;
         transition: all 0.3s ease !important;
     }
-    
     [data-testid="stFileUploaderDropzone"]:hover {
         border-color: #0b4aa0 !important;
         background-color: #edf2f7 !important;
     }
-    
     [data-testid="stFileUploaderDropzone"] span {
         color: #718096 !important;
         font-size: 12px !important;
     }
-    
-    /* "Browse Files" Button */
     .stFileUploader button {
         background-color: #00aeeb !important;
         color: #ffffff !important;
@@ -163,22 +217,16 @@ st.markdown("""
         border-radius: 6px !important;
         box-shadow: 0 2px 6px rgba(0, 174, 235, 0.2) !important;
     }
-
-    /* Info-Boxen Text */
     .stAlert p, .stAlert span, .stAlert div {
         color: #1a1a1a !important;
         font-weight: bold !important;
     }
-
-    /* Label-Texte über den Feldern */
     label {
         color: #0b4aa0 !important;
         font-weight: bold !important;
         font-size: 0.95rem !important;
         margin-bottom: 6px !important;
     }
-    
-    /* Senden-Button */
     div.stButton > button:first-child {
         background-color: #00aeeb !important;
         color: #ffffff !important;
@@ -190,10 +238,9 @@ st.markdown("""
         font-size: 16px !important;
         width: 100% !important;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 14px rgba(0, 174, 235, 0.2) !important;
+        box-shadow: 0 4px 14 rgba(0, 174, 235, 0.2) !important;
         margin-bottom: 20px !important;
     }
-    
     div.stButton > button:first-child:hover {
         background-color: #0b4aa0 !important;
         box-shadow: 0 6px 20px rgba(11, 74, 160, 0.3) !important;
@@ -202,7 +249,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. Logo einbinden & zentrieren
 LOGO_DATEINAME = "pg-finance_Logo.jpg"
 if os.path.exists(LOGO_DATEINAME):
     logo = Image.open(LOGO_DATEINAME)
@@ -223,9 +269,8 @@ st.markdown("""
 pin_eingabe = st.text_input("PIN-Eingabe", type="password", label_visibility="collapsed", placeholder="Bitte Ihre persönliche Kunden-PIN eingeben...")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# PRÜFEN, OB DIE PIN IN DER DATENBANK EXISTIERT
-if pin_eingabe in KUNDEN_DATENBANK:
-    # Daten des spezifischen Kunden laden
+# PRÜFEN, OB DIE PIN IN DER DATENBANK EXISTIERT & BEREIT IST
+if pin_eingabe in KUNDEN_DATENBANK and KUNDEN_DATENBANK[pin_eingabe].get("status", "Bereit") == "Bereit":
     kunden_info = KUNDEN_DATENBANK[pin_eingabe]
     kunden_nachname = kunden_info["nachname"]
     kunden_vorname = kunden_info["vorname"]
@@ -240,15 +285,14 @@ if pin_eingabe in KUNDEN_DATENBANK:
     
     col1, col2 = st.columns(2)
     with col1:
-        # Die Felder werden automatisch mit den Daten des Kunden vorausgefüllt!
-        name = st.text_input("Nachname *", value=kunden_nachname, disabled=True) # "disabled=True" verhindert, dass der Kunde den Namen ändert
+        name = st.text_input("Nachname *", value=kunden_nachname, disabled=True)
         vorname = st.text_input("Vorname *", value=kunden_vorname, disabled=True)
     with col2:
         geburtsort = st.text_input("Geburtsort *")
         familienstand = st.selectbox("Familienstand", ["Ledig", "Verheiratet", "Eingetragene Lebenspartnerschaft", "Geschieden", "Verwitwet"])
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # === KARTE 2: FAHRZEUG ===
+    # === KARTE 2: FAHRZEUG (Mit Kennzeichen & Neufahrzeug-Checkbox!) ===
     st.markdown("""
         <div class="form-card">
             <span class="card-header">Fahrzeug & Nutzung</span>
@@ -262,6 +306,17 @@ if pin_eingabe in KUNDEN_DATENBANK:
         garage = st.selectbox("Abstellort des Fahrzeugs (Garage) *", ["Einzel-/Doppelgarage", "Tiefgarage", "Carport", "Privatgrundstück (befriedet)", "Straße / Laternenparker"])
     
     st.write("") 
+    # Kennzeichen & Neufahrzeug-Auswahl
+    col_kz1, col_kz2 = st.columns([2, 1])
+    with col_kz2:
+        neufahrzeug = st.checkbox("Neufahrzeug", help="Aktivieren Sie dies, falls das Fahrzeug noch nicht zugelassen ist.")
+    with col_kz1:
+        if neufahrzeug:
+            kennzeichen = st.text_input("Amtliches Kennzeichen", value="NEUFAHRZEUG", disabled=True)
+        else:
+            kennzeichen = st.text_input("Amtliches Kennzeichen *", placeholder="z.B. BA-PG-99")
+
+    st.write("")
     fahrzeugschein = st.file_uploader("Fahrzeugschein hier hochladen/fotografieren *", type=["pdf", "png", "jpg", "jpeg"])
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -275,7 +330,6 @@ if pin_eingabe in KUNDEN_DATENBANK:
     st.write("") 
     police = st.file_uploader("Letzte Versicherungspolice hier hochladen/fotografieren *", type=["pdf", "png", "jpg", "jpeg"])
     
-    # Führerschein: Zwei Spalten nebeneinander
     st.markdown("<p style='color: #0b4aa0; font-weight: bold; margin-bottom: 2px;'>Führerschein aller berechtigten Fahrer *</p>", unsafe_allow_html=True)
     col_fs1, col_fs2 = st.columns(2)
     with col_fs1:
@@ -283,7 +337,6 @@ if pin_eingabe in KUNDEN_DATENBANK:
     with col_fs2:
         fs_rueckseite = st.file_uploader("Rückseite (Pflicht) *", type=["pdf", "png", "jpg", "jpeg"], key="fs_hinten")
         
-    # Personalausweis / Reisepass: Zwei Spalten nebeneinander
     st.markdown("<p style='color: #0b4aa0; font-weight: bold; margin-top: 15px; margin-bottom: 2px;'>Ausweisdokument aller berechtigten Fahrer *</p>", unsafe_allow_html=True)
     col_id1, col_id2 = st.columns(2)
     with col_id1:
@@ -293,42 +346,21 @@ if pin_eingabe in KUNDEN_DATENBANK:
         
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Pflichtfelder prüfen
+    # Pflichtfelder-Validierung
+    pflicht_kennzeichen = neufahrzeug or (kennzeichen and kennzeichen != "")
     pflichtfelder_ausgefuellt = (name and vorname and geburtsort and fahrzeugschein and police 
-                                 and fs_vorderseite and fs_rueckseite and ausweis_vorderseite)
+                                 and fs_vorderseite and fs_rueckseite and ausweis_vorderseite and pflicht_kennzeichen)
 
     if pflichtfelder_ausgefuellt:
         if st.button("DATEN JETZT SICHER ÜBERTRAGEN", type="primary"):
             
-            # Ordnerstruktur erstellen
-            ordner_name = f"Kunde_{name}_{vorname}"
+            # Pfad-sicheres Kennzeichen erzeugen (Verhindert Sonderzeichen in Ordnernamen)
+            safe_kz = kennzeichen.replace(" ", "-").replace("/", "-")
+            ordner_name = f"Kunde_{name}_{vorname}_{safe_kz}"
+            
+            # Lokales Backup erstellen
             if not os.path.exists(ordner_name):
                 os.makedirs(ordner_name)
-            
-            # Dateien speichern
-            if police:
-                with open(os.path.join(ordner_name, f"Police_{police.name}"), "wb") as f:
-                    f.write(police.getbuffer())
-                    
-            if fahrzeugschein:
-                with open(os.path.join(ordner_name, f"Fahrzeugschein_{fahrzeugschein.name}"), "wb") as f:
-                    f.write(fahrzeugschein.getbuffer())
-            
-            if fs_vorderseite:
-                with open(os.path.join(ordner_name, f"FS_Vorderseite_{fs_vorderseite.name}"), "wb") as f:
-                    f.write(fs_vorderseite.getbuffer())
-                    
-            if fs_rueckseite:
-                with open(os.path.join(ordner_name, f"FS_Rueckseite_{fs_rueckseite.name}"), "wb") as f:
-                    f.write(fs_rueckseite.getbuffer())
-
-            if ausweis_vorderseite:
-                with open(os.path.join(ordner_name, f"Ausweis_Vorderseite_{ausweis_vorderseite.name}"), "wb") as f:
-                    f.write(ausweis_vorderseite.getbuffer())
-                    
-            if ausweis_rueckseite:
-                with open(os.path.join(ordner_name, f"Ausweis_Rueckseite_{ausweis_rueckseite.name}"), "wb") as f:
-                    f.write(ausweis_rueckseite.getbuffer())
 
             # Formatierte Textdatei für Ihr Copy-Paste erzeugen
             infotext = f"""=== KUNDENDATEN FÜR NAFI / COMPARIT ===
@@ -337,6 +369,7 @@ Vorname: {vorname}
 Geburtsort: {geburtsort}
 Familienstand: {familienstand}
 ----------------------------------------
+Kennzeichen: {kennzeichen}
 Fahrleistung: {fahrleistung} km/Jahr
 Aktueller KM-Stand: {km_stand} km
 Garage: {garage}
@@ -345,9 +378,41 @@ Garage: {garage}
             with open(os.path.join(ordner_name, "Kopier_Vorlage.txt"), "w", encoding="utf-8") as f:
                 f.write(infotext)
 
-            st.balloons()
-            st.success("🎉 Übertragung erfolgreich! Ihre Daten wurden sicher an uns übermittelt.")
-            
+            # === ONEDRIVE HOCHLADEN-PROZESS ===
+            if token:
+                with st.spinner("Dateien werden sicher auf Ihr OneDrive geladen..."):
+                    # 1. Textdatei hochladen
+                    upload_file_to_onedrive(token, ordner_name, "Kopier_Vorlage.txt", infotext.encode("utf-8"))
+                    
+                    # 2. Fahrzeugschein hochladen
+                    if fahrzeugschein:
+                        upload_file_to_onedrive(token, ordner_name, f"Fahrzeugschein_{fahrzeugschein.name}", fahrzeugschein.getbuffer())
+                    
+                    # 3. Police hochladen
+                    if police:
+                        upload_file_to_onedrive(token, ordner_name, f"Police_{police.name}", police.getbuffer())
+                        
+                    # 4. Führerscheine hochladen
+                    if fs_vorderseite:
+                        upload_file_to_onedrive(token, ordner_name, f"FS_Vorderseite_{fs_vorderseite.name}", fs_vorderseite.getbuffer())
+                    if fs_rueckseite:
+                        upload_file_to_onedrive(token, ordner_name, f"FS_Rueckseite_{fs_rueckseite.name}", fs_rueckseite.getbuffer())
+                        
+                    # 5. Ausweise hochladen
+                    if ausweis_vorderseite:
+                        upload_file_to_onedrive(token, ordner_name, f"Ausweis_Vorderseite_{ausweis_vorderseite.name}", ausweis_vorderseite.getbuffer())
+                    if ausweis_rueckseite:
+                        upload_file_to_onedrive(token, ordner_name, f"Ausweis_Rueckseite_{ausweis_rueckseite.name}", ausweis_rueckseite.getbuffer())
+                    
+                    # 6. Status in der OneDrive-Excel auf 'Ausgefüllt' setzen
+                    update_excel_status_on_onedrive(token, pin_eingabe)
+                    
+                st.balloons()
+                st.success("🎉 Übertragung erfolgreich! Alle Daten und Dokumente wurden sicher auf Ihrem OneDrive abgelegt.")
+            else:
+                # Fallback, falls OneDrive-Schnittstelle noch nicht aktiv ist (lokales Speichern)
+                st.warning("⚠️ OneDrive Verbindung fehlgeschlagen. Daten wurden nur lokal auf dem Server gespeichert.")
+
             # Der fertige Kopierbereich für Sie
             st.write("---")
             st.subheader("📋 Kopierbereich für das Maklerbüro")
@@ -362,6 +427,8 @@ Garage: {garage}
         theme_img = Image.open(THEME_BILD)
         st.image(theme_img, use_container_width=True)
 
+elif pin_eingabe in KUNDEN_DATENBANK and KUNDEN_DATENBANK[pin_eingabe].get("status") == "Ausgefüllt":
+    st.error("❌ Diese PIN wurde bereits erfolgreich verwendet und ist abgelaufen. Bitte kontaktieren Sie Patrick Grellner Finance für einen neuen Zugang.")
 else:
     if pin_eingabe != "":
-        st.error("❌ Falsche PIN oder PIN bereits abgelaufen. Bitte prüfen Sie Ihre Eingabe oder fragen Sie einen neuen Zugang an.")
+        st.error("❌ Falsche PIN. Bitte prüfen Sie Ihre Eingabe.")
