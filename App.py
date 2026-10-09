@@ -9,7 +9,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. BRANDING & CLEAN DESIGN CSS (Keine doppelten Boxen, perfekt lesbare Upload-Bereiche)
+# 2. BRANDING & CLEAN DESIGN CSS (Optimiert für nebeneinander liegende Uploads)
 st.markdown("""
     <style>
     /* Hintergrund zu 100% reinweiß */
@@ -20,7 +20,7 @@ st.markdown("""
         font-family: 'Varela Round', 'Varela', sans-serif !important;
     }
     
-    /* Hauptüberschrift in Ihrer originalen blauen Markenfarbe */
+    /* Hauptüberschrift in Ihrer Markenfarbe */
     .main-title {
         font-family: 'Varela Round', sans-serif;
         color: #0b4aa0;
@@ -48,19 +48,18 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
     }
     
-    /* Bereichsüberschriften */
+    /* Bereichsüberschriften DIREKT IN DEN KARTEN integriert */
     .section-title {
         color: #0b4aa0;
         font-size: 1.3rem;
         font-weight: 600;
+        margin-top: 0px !important;
         margin-bottom: 18px;
         border-bottom: 2px solid #00aeeb;
         padding-bottom: 8px;
     }
     
-    /* ========================================================================= */
-    /* EINHEITLICHE RÄNDER FÜR NORMALE EINGABEFELDER                             */
-    /* ========================================================================= */
+    /* Ränder der Eingabefelder im originalen edlen Cyan-Blau (#00aeeb) */
     .stTextInput input, .stNumberInput input {
         background-color: #ffffff !important;
         color: #0b4aa0 !important;
@@ -80,9 +79,7 @@ st.markdown("""
         box-shadow: none !important;
     }
     
-    /* ========================================================================= */
-    /* SEAMLESS OPTIK FÜR SELECTBOXEN (OHNE DOPPELTE RÄNDER)                     */
-    /* ========================================================================= */
+    /* Seamless Optik für Selectboxen */
     .stSelectbox div[role="button"], 
     .stSelectbox div[data-baseweb="select"], 
     .stSelectbox [data-baseweb="select"] > div {
@@ -119,52 +116,44 @@ st.markdown("""
         box-shadow: 0 0 0 3px rgba(11, 74, 160, 0.2) !important;
     }
 
-    /* ========================================================================= */
-    /* KORREKTUR: SCHICKE OPTIK FÜR DIE UPLOADER-BOXEN (PASSEND ZUM DESIGN)      */
-    /* ========================================================================= */
-    
-    /* Anstatt sie auszublenden, stylen wir die Uploader-Boxen wunderschön im PG-Design! */
+    /* Gestaltete Uploader-Boxen passend zum Design */
     [data-testid="stFileUploaderDropzone"] {
-        border: 2px dashed #00aeeb !important; /* Edler, gestrichelter Rahmen in Cyan */
-        background-color: #f7fafc !important; /* Ganz weiches, sauberes Hellgrau im Inneren */
+        border: 2px dashed #00aeeb !important;
+        background-color: #f7fafc !important;
         border-radius: 8px !important;
-        padding: 20px !important;
+        padding: 15px !important;
         box-shadow: none !important;
         transition: all 0.3s ease !important;
     }
     
-    /* Hover-Effekt für die Upload-Zone */
     [data-testid="stFileUploaderDropzone"]:hover {
         border-color: #0b4aa0 !important;
         background-color: #edf2f7 !important;
     }
     
-    /* Wir blenden nur den unnötigen englischen "Limit 200MB" Text aus */
     [data-testid="stFileUploaderDropzone"] span {
         color: #718096 !important;
-        font-size: 13px !important;
+        font-size: 12px !important;
     }
     
-    /* Den "Browse Files" Button stylen wir als edlen blauen Knopf */
+    /* "Browse Files" Button */
     .stFileUploader button {
         background-color: #00aeeb !important;
         color: #ffffff !important;
         border: none !important;
         font-weight: bold !important;
         font-family: 'Varela Round', sans-serif !important;
-        font-size: 14px !important;
-        padding: 8px 18px !important;
+        font-size: 13px !important;
+        padding: 6px 14px !important;
         border-radius: 6px !important;
         box-shadow: 0 2px 6px rgba(0, 174, 235, 0.2) !important;
-        transition: all 0.2s ease !important;
     }
     
     .stFileUploader button:hover {
         background-color: #0b4aa0 !important;
-        box-shadow: 0 4px 12px rgba(11, 74, 160, 0.3) !important;
     }
 
-    /* Info-Boxen Text lesbar machen */
+    /* Info-Boxen Text */
     .stAlert p, .stAlert span, .stAlert div {
         color: #1a1a1a !important;
         font-weight: bold !important;
@@ -226,7 +215,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 if pin_eingabe == KORREKTE_PIN:
     st.success("🔓 Zugang erfolgreich freigeschaltet.")
 
-    # === KARTE 1: PERSÖNLICHE DATEN ===
+    # === KARTE 1: PERSÖNLICHE DATEN (Überschrift im weißen Kasten integriert) ===
     st.markdown('<div class="form-card">', unsafe_allow_html=True)
     st.markdown("<div class='section-title'>👤 Persönliche Daten</div>", unsafe_allow_html=True)
     
@@ -239,29 +228,50 @@ if pin_eingabe == KORREKTE_PIN:
         familienstand = st.selectbox("Familienstand", ["Ledig", "Verheiratet", "Eingetragene Lebenspartnerschaft", "Geschieden", "Verwitwet"])
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # === KARTE 2: FAHRZEUG ===
+    # === KARTE 2: FAHRZEUG (Inklusive Fahrzeugschein-Upload & integrierter Überschrift) ===
     st.markdown('<div class="form-card">', unsafe_allow_html=True)
     st.markdown("<div class='section-title'>🚘 Fahrzeug & Nutzung</div>", unsafe_allow_html=True)
     
-    fahrleistung = st.number_input("Jährliche Fahrleistung (in km) *", value=10000, step=1000)
-    km_stand = st.number_input("Aktueller Kilometerstand (bei älteren Fahrzeugen)", value=0, step=5000)
-    garage = st.selectbox("Abstellort des Fahrzeugs (Garage) *", ["Einzel-/Doppelgarage", "Tiefgarage", "Carport", "Privatgrundstück (befriedet)", "Straße / Laternenparker"])
+    col_fz1, col_col2 = st.columns(2)
+    with col_fz1:
+        fahrleistung = st.number_input("Jährliche Fahrleistung (in km) *", value=10000, step=1000)
+        km_stand = st.number_input("Aktueller Kilometerstand", value=0, step=5000)
+    with col_col2:
+        garage = st.selectbox("Abstellort des Fahrzeugs (Garage) *", ["Einzel-/Doppelgarage", "Tiefgarage", "Carport", "Privatgrundstück (befriedet)", "Straße / Laternenparker"])
+    
+    st.write("") # Abstandhalter
+    fahrzeugschein = st.file_uploader("Fahrzeugschein hier hochladen/fotografieren *", type=["pdf", "png", "jpg", "jpeg"])
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # === KARTE 3: DOKUMENTE ===
+    # === KARTE 3: DOKUMENTE (Mit nebeneinander liegenden Feldern & integrierter Überschrift) ===
     st.markdown('<div class="form-card">', unsafe_allow_html=True)
     st.markdown("<div class='section-title'>📂 Dokumente hochladen</div>", unsafe_allow_html=True)
-    
     st.info("💡 Dokumente oder Fotos können Sie ganz einfach direkt mit Ihrer Smartphone-Kamera aufnehmen.")
     
-    # KORREKTUR: Wir nutzen die Standard-Uploader, beschriften sie aber absolut verständlich für den Kunden!
+    st.write("") # Abstandhalter
     police = st.file_uploader("Letzte Versicherungspolice hier hochladen/fotografieren *", type=["pdf", "png", "jpg", "jpeg"])
-    fuehrerscheine = st.file_uploader("Führerschein Vorder- & Rückseite aller Fahrer hochladen/fotografieren *", type=["pdf", "png", "jpg", "jpeg"], accept_multiple_files=True)
-    ausweise = st.file_uploader("Personalausweis Vorder- & Rückseite aller Fahrer hochladen/fotografieren *", type=["pdf", "png", "jpg", "jpeg"], accept_multiple_files=True)
+    
+    # Führerschein: Zwei Spalten nebeneinander
+    st.markdown("<p style='color: #0b4aa0; font-weight: bold; margin-bottom: 2px;'>Führerschein aller berechtigten Fahrer *</p>", unsafe_allow_html=True)
+    col_fs1, col_fs2 = st.columns(2)
+    with col_fs1:
+        fs_vorderseite = st.file_uploader("Vorderseite (Pflicht) *", type=["pdf", "png", "jpg", "jpeg"], key="fs_vorn")
+    with col_fs2:
+        fs_rueckseite = st.file_uploader("Rückseite (Pflicht) *", type=["pdf", "png", "jpg", "jpeg"], key="fs_hinten")
+        
+    # Personalausweis / Reisepass: Zwei Spalten nebeneinander
+    st.markdown("<p style='color: #0b4aa0; font-weight: bold; margin-top: 15px; margin-bottom: 2px;'>Ausweisdokument aller berechtigten Fahrer *</p>", unsafe_allow_html=True)
+    col_id1, col_id2 = st.columns(2)
+    with col_id1:
+        ausweis_vorderseite = st.file_uploader("Vorderseite / Reisepass-Hauptseite *", type=["pdf", "png", "jpg", "jpeg"], key="ausweis_vorn")
+    with col_id2:
+        ausweis_rueckseite = st.file_uploader("Rückseite (Optional)", type=["pdf", "png", "jpg", "jpeg"], key="ausweis_hinten")
+        
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Pflichtfelder prüfen
-    pflichtfelder_ausgefuellt = name and vorname and geburtsort and police and fuehrerscheine and ausweise
+    # Pflichtfelder prüfen (Fahrzeugschein, Police, FS vorn/hinten, Ausweis vorn müssen ausgefüllt sein!)
+    pflichtfelder_ausgefuellt = (name and vorname and geburtsort and fahrzeugschein and police 
+                                 and fs_vorderseite and fs_rueckseite and ausweis_vorderseite)
 
     if pflichtfelder_ausgefuellt:
         if st.button("DATEN JETZT SICHER ÜBERTRAGEN", type="primary"):
@@ -275,14 +285,26 @@ if pin_eingabe == KORREKTE_PIN:
             if police:
                 with open(os.path.join(ordner_name, f"Police_{police.name}"), "wb") as f:
                     f.write(police.getbuffer())
+                    
+            if fahrzeugschein:
+                with open(os.path.join(ordner_name, f"Fahrzeugschein_{fahrzeugschein.name}"), "wb") as f:
+                    f.write(fahrzeugschein.getbuffer())
             
-            for i, fs in enumerate(fuehrerscheine):
-                with open(os.path.join(ordner_name, f"FS_{i}_{fs.name}"), "wb") as f:
-                    f.write(fs.getbuffer())
+            if fs_vorderseite:
+                with open(os.path.join(ordner_name, f"FS_Vorderseite_{fs_vorderseite.name}"), "wb") as f:
+                    f.write(fs_vorderseite.getbuffer())
+                    
+            if fs_rueckseite:
+                with open(os.path.join(ordner_name, f"FS_Rueckseite_{fs_rueckseite.name}"), "wb") as f:
+                    f.write(fs_rueckseite.getbuffer())
 
-            for i, aus in enumerate(ausweise):
-                with open(os.path.join(ordner_name, f"Ausweis_{i}_{aus.name}"), "wb") as f:
-                    f.write(aus.getbuffer())
+            if ausweis_vorderseite:
+                with open(os.path.join(ordner_name, f"Ausweis_Vorderseite_{ausweis_vorderseite.name}"), "wb") as f:
+                    f.write(ausweis_vorderseite.getbuffer())
+                    
+            if ausweis_rueckseite:
+                with open(os.path.join(ordner_name, f"Ausweis_Rueckseite_{ausweis_rueckseite.name}"), "wb") as f:
+                    f.write(ausweis_rueckseite.getbuffer())
 
             # Formatierte Textdatei für Ihr Copy-Paste erzeugen
             infotext = f"""=== KUNDENDATEN FÜR NAFI / COMPARIT ===
@@ -308,7 +330,7 @@ Garage: {garage}
             st.code(infotext, language="text")
 
     else:
-        st.warning("⚠️ Bitte füllen Sie alle mit * markierten Felder aus und laden Sie die Dokumente hoch, um die Übertragung zu starten.")
+        st.warning("⚠️ Bitte füllen Sie alle mit * markierten Felder aus und laden Sie die Pflichtdokumente hoch, um die Übertragung zu starten.")
 
     # 6. STIMMUNGSBILD GANZ UNTEN
     THEME_BILD = "pg-finance-theme.jpg"
