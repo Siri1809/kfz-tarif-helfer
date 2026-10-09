@@ -216,8 +216,10 @@ st.markdown("<h1 class='main-title'>Datenerfassung</h1>", unsafe_allow_html=True
 st.markdown("<p class='main-subtitle'>Schnell und sicher alle Daten für Ihre Autoversicherung einreichen</p>", unsafe_allow_html=True)
 
 # 4. Sicherheits-Schranke: Die Kunden-PIN
-st.markdown('<div class="form-card">', unsafe_allow_html=True)
-st.markdown("<h3 style='font-size: 1.1rem; color: #0b4aa0; margin-top: 0; margin-bottom: 12px;'>Zugang freischalten</h3>", unsafe_allow_html=True)
+st.markdown("""
+        <div class="form-card">
+            <span class="card-header">Zugang freischalten</span>
+    """, unsafe_allow_html=True)
 pin_eingabe = st.text_input("PIN-Eingabe", type="password", label_visibility="collapsed", placeholder="Bitte Ihre persönliche Kunden-PIN eingeben...")
 st.markdown('</div>', unsafe_allow_html=True)
 
