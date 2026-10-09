@@ -9,6 +9,18 @@ st.set_page_config(
     layout="centered"
 )
 
+# === HIER VERWALTEN SIE IHRE KUNDEN-PINS ===
+# Sie können diese Liste beliebig erweitern. 
+# Format: "PIN": {"nachname": "...", "vorname": "..."}
+KUNDEN_DATENBANK = {
+    "pgffe": {"nachname": "Geck", "vorname": "Ramona"},
+    "011026": {"nachname": "Truetsch", "vorname": "Tobias"},
+    "0000": {"nachname": "Seyschab", "vorname": "Simon"},
+    "1234": {"nachname": "Grellner", "vorname": "Patrick"},
+    "mf1026": {"nachname": "Filip", "vorname": "Markus"},
+    # Hier einfach neue Zeilen eintragen, wenn Sie einen neuen Kunden anlegen!
+}
+
 # 2. BRANDING, SEAMLESS CARD, SPACING & DEEP MOBILE CONTRAST FIX CSS
 st.markdown("""
     <style>
@@ -38,7 +50,7 @@ st.markdown("""
         margin-bottom: 20px;
     }
     
-    /* Karten-Optik für die Abschnitte (Mit extrem sauberer Ausrichtung) */
+    /* Karten-Optik für die Abschnitte */
     .form-card {
         background-color: #ffffff;
         padding: 24px;
@@ -49,7 +61,7 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
     }
     
-    /* KORREKTUR: Erzwingt, dass die HTML-Überschriften in den Karten perfekt aussehen */
+    /* KORREKTUR: HTML-Überschriften in den Karten */
     .card-header {
         color: #0b4aa0 !important;
         font-size: 1.35rem !important;
@@ -118,48 +130,6 @@ st.markdown("""
         border-color: #0b4aa0 !important;
         box-shadow: 0 0 0 3px rgba(11, 74, 160, 0.2) !important;
     }
-
-    /* ========================================================================= */
-    /* KORREKTUR: ZWINGT MOBILE BROWSER ZU DEZENTEN GRAU-BLAUEN KONTRASTEN        */
-    /* ========================================================================= */
-    
-    /* Zerstört das von Handys erzwungene harte schwarze Kontrast-Design komplett */
-    select, button, input, div[role="button"], svg, [data-baseweb="icon"] {
-        -webkit-appearance: none !important;
-        -moz-appearance: none !important;
-        appearance: none !important;
-    }
-
-    /* Färbt alle Plus/Minus-Symbole und Dropdown-Pfeile GARANTIERT in dezentem Grau-Blau */
-    svg, 
-    [data-baseweb="icon"] svg, 
-    .stNumberInput button svg, 
-    [data-testid="InputInstruction"] {
-        fill: #718096 !important;
-        color: #718096 !important;
-    }
-
-    /* Setzt das Aussehen der Plus/Minus-Knöpfe bei Zahlenfeldern auf weiches Hellgrau */
-    .stNumberInput button {
-        background-color: #f7fafc !important;
-        border: 1px solid #cbd5e0 !important;
-        color: #718096 !important;
-        border-radius: 4px !important;
-        font-weight: bold !important;
-        transition: all 0.2s ease !important;
-    }
-
-    .stNumberInput button:hover {
-        background-color: #e2e8f0 !important;
-        color: #0b4aa0 !important;
-    }
-
-    /* Dropdown-Pfeil (Auswahllisten) farblich perfekt dämpfen */
-    [data-baseweb="icon"] {
-        color: #718096 !important;
-    }
-
-    /* ========================================================================= */
 
     /* Gestaltete Uploader-Boxen passend zum Design */
     [data-testid="stFileUploaderDropzone"] {
@@ -245,29 +215,32 @@ else:
 st.markdown("<h1 class='main-title'>Datenerfassung</h1>", unsafe_allow_html=True)
 st.markdown("<p class='main-subtitle'>Schnell und sicher alle Daten für Ihre Autoversicherung einreichen</p>", unsafe_allow_html=True)
 
-# 4. Sicherheits-Schranke: Die Kunden-PIN (Eingebettet in form-card)
-KORREKTE_PIN = "1234" 
-
-st.markdown("""
-    <div class="form-card">
-        <span class="card-header">🔑 Zugang freischalten</span>
-""", unsafe_allow_html=True)
-pin_eingabe = st.text_input("PIN-Eingabe", type="password", label_visibility="collapsed", placeholder="Bitte PIN eingeben...")
+# 4. Sicherheits-Schranke: Die Kunden-PIN
+st.markdown('<div class="form-card">', unsafe_allow_html=True)
+st.markdown("<h3 style='font-size: 1.1rem; color: #0b4aa0; margin-top: 0; margin-bottom: 12px;'>Zugang freischalten</h3>", unsafe_allow_html=True)
+pin_eingabe = st.text_input("PIN-Eingabe", type="password", label_visibility="collapsed", placeholder="Bitte Ihre persönliche Kunden-PIN eingeben...")
 st.markdown('</div>', unsafe_allow_html=True)
 
-if pin_eingabe == KORREKTE_PIN:
-    st.success("🔓 Zugang erfolgreich freigeschaltet.")
+# PRÜFEN, OB DIE PIN IN DER DATENBANK EXISTIERT
+if pin_eingabe in KUNDEN_DATENBANK:
+    # Daten des spezifischen Kunden laden
+    kunden_info = KUNDEN_DATENBANK[pin_eingabe]
+    kunden_nachname = kunden_info["nachname"]
+    kunden_vorname = kunden_info["vorname"]
+
+    st.success(f"🔓 Willkommen {kunden_vorname} {kunden_nachname}! Ihr Formular wurde freigeschaltet.")
 
     # === KARTE 1: PERSÖNLICHE DATEN ===
     st.markdown("""
         <div class="form-card">
-            <span class="card-header">👤 Persönliche Daten</span>
+            <span class="card-header">Persönliche Daten</span>
     """, unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     with col1:
-        name = st.text_input("Nachname *")
-        vorname = st.text_input("Vorname *")
+        # Die Felder werden automatisch mit den Daten des Kunden vorausgefüllt!
+        name = st.text_input("Nachname *", value=kunden_nachname, disabled=True) # "disabled=True" verhindert, dass der Kunde den Namen ändert
+        vorname = st.text_input("Vorname *", value=kunden_vorname, disabled=True)
     with col2:
         geburtsort = st.text_input("Geburtsort *")
         familienstand = st.selectbox("Familienstand", ["Ledig", "Verheiratet", "Eingetragene Lebenspartnerschaft", "Geschieden", "Verwitwet"])
@@ -276,7 +249,7 @@ if pin_eingabe == KORREKTE_PIN:
     # === KARTE 2: FAHRZEUG ===
     st.markdown("""
         <div class="form-card">
-            <span class="card-header">🚘 Fahrzeug & Nutzung</span>
+            <span class="card-header">Fahrzeug & Nutzung</span>
     """, unsafe_allow_html=True)
     
     col_fz1, col_col2 = st.columns(2)
@@ -293,7 +266,7 @@ if pin_eingabe == KORREKTE_PIN:
     # === KARTE 3: DOKUMENTE ===
     st.markdown("""
         <div class="form-card">
-            <span class="card-header">📂 Dokumente hochladen</span>
+            <span class="card-header">Dokumente hochladen</span>
     """, unsafe_allow_html=True)
     st.info("💡 Dokumente oder Fotos können Sie ganz einfach direkt mit Ihrer Smartphone-Kamera aufnehmen.")
     
@@ -389,4 +362,4 @@ Garage: {garage}
 
 else:
     if pin_eingabe != "":
-        st.error("❌ Falsche PIN. Bitte prüfen Sie Ihre Eingabe.")
+        st.error("❌ Falsche PIN oder PIN bereits abgelaufen. Bitte prüfen Sie Ihre Eingabe oder fragen Sie einen neuen Zugang an.")
