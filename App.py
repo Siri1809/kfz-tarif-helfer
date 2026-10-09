@@ -206,8 +206,9 @@ st.markdown("<p class='main-subtitle'>Schnell und sicher alle Daten für Ihre Au
 # 4. Sicherheits-Schranke: Die Kunden-PIN
 KORREKTE_PIN = "1234" 
 
-st.markdown('<div class="form-card">', unsafe_allow_html=True)
-st.markdown("<h3 style='font-size: 1.1rem; color: #0b4aa0; margin-top: 0; margin-bottom: 12px;'>🔑 Zugang freischalten</h3>", unsafe_allow_html=True)
+st.markdown("""'<div class="form-card">'
+                <span class="card-header">Persönliche Daten</span>
+""", unsafe_allow_html=True)
 pin_eingabe = st.text_input("PIN-Eingabe", type="password", label_visibility="collapsed", placeholder="Bitte PIN eingeben...")
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -217,7 +218,7 @@ if pin_eingabe == KORREKTE_PIN:
     # === KARTE 1: PERSÖNLICHE DATEN (Überschrift als HTML direkt in der Karte!) ===
     st.markdown("""
         <div class="form-card">
-            <span class="card-header">👤 Persönliche Daten</span>
+            <span class="card-header">Persönliche Daten</span>
     """, unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
@@ -232,7 +233,7 @@ if pin_eingabe == KORREKTE_PIN:
     # === KARTE 2: FAHRZEUG (Überschrift als HTML direkt in der Karte!) ===
     st.markdown("""
         <div class="form-card">
-            <span class="card-header">🚘 Fahrzeug & Nutzung</span>
+            <span class="card-header">Fahrzeug & Nutzung</span>
     """, unsafe_allow_html=True)
     
     col_fz1, col_col2 = st.columns(2)
@@ -249,7 +250,7 @@ if pin_eingabe == KORREKTE_PIN:
     # === KARTE 3: DOKUMENTE (Überschrift als HTML direkt in der Karte!) ===
     st.markdown("""
         <div class="form-card">
-            <span class="card-header">📂 Dokumente hochladen</span>
+            <span class="card-header">Dokumente hochladen</span>
     """, unsafe_allow_html=True)
     st.info("💡 Dokumente oder Fotos können Sie ganz einfach direkt mit Ihrer Smartphone-Kamera aufnehmen.")
     
