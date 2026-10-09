@@ -9,7 +9,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. BRANDING & SEAMLESS BORDER CSS (Garantiert eine glatte, durchgezogene Optik für alle Felder)
+# 2. BRANDING & TEXT-KORREKTUR CSS
 st.markdown("""
     <style>
     /* Hintergrund zu 100% reinweiß */
@@ -59,18 +59,11 @@ st.markdown("""
     }
     
     /* ========================================================================= */
-    /* UNIVERSELL LESBARE HINWEISBOX (HTML-KORREKTUR FÜR MOBILGERÄTE)             */
+    /* KORREKTUR: TEXT IN DER GELBEN/BLAUEN INFOBOX TIEFSCHWARZ ERZWINGEN       */
     /* ========================================================================= */
-    .custom-info-box {
-        background-color: #ebf8ff !important;
-        border-left: 4px solid #00aeeb !important;
-        color: #2b6cb0 !important;
-        padding: 16px !important;
-        border-radius: 8px !important;
+    .stAlert p, .stAlert span, .stAlert div {
+        color: #1a1a1a !important; /* Erzwingt tiefschwarzen, perfekt lesbaren Text auf allen Handys */
         font-weight: bold !important;
-        font-size: 0.95rem !important;
-        margin-bottom: 20px !important;
-        line-height: 1.5 !important;
     }
     
     /* ========================================================================= */
@@ -95,7 +88,7 @@ st.markdown("""
         box-shadow: none !important;
     }
     
-    /* KORREKTUR: SELECTBOXEN BEKOMMEN IHREN RAHMEN ZURÜCK (OHNE DOPPELTE LINIE)  */
+    /* KORREKTUR: SELECTBOXEN BEKOMMEN ENTLICH IHRE SEAMLESS OPTIK ZURÜCK        */
     .stSelectbox div[role="button"], 
     .stSelectbox div[data-baseweb="select"], 
     .stSelectbox [data-baseweb="select"] > div {
@@ -130,53 +123,6 @@ st.markdown("""
     .stTextInput input:focus, .stNumberInput input:focus, .stSelectbox [data-baseweb="select"]:focus {
         border-color: #0b4aa0 !important;
         box-shadow: 0 0 0 3px rgba(11, 74, 160, 0.2) !important;
-    }
-
-    /* KORREKTUR: UPLOADER-BOXEN KOMPLETT RÜCKSTANDSLOS ENTFERNEN                */
-    [data-testid="stFileUploader"], 
-    [data-testid="stFileUploader"] > div, 
-    [data-testid="stFileUploader"] section {
-        border: none !important;
-        box-shadow: none !important;
-        background-color: transparent !important;
-        background: transparent !important;
-        padding: 0px !important;
-    }
-    
-    [data-testid="stFileUploaderDropzone"] {
-        border: none !important;
-        background-color: transparent !important;
-        background: transparent !important;
-        box-shadow: none !important;
-        padding: 0px !important;
-    }
-    
-    [data-testid="stFileUploaderDropzone"] div, 
-    [data-testid="stFileUploaderDropzone"] span,
-    [data-testid="stFileUploaderDropzone"] svg {
-        display: none !important;
-    }
-    
-    /* Nur noch den schicken Button einblenden und perfekt stylen */
-    .stFileUploader button {
-        display: block !important;
-        background-color: #ffffff !important;
-        color: #00aeeb !important;
-        border: 2px solid #00aeeb !important;
-        font-weight: bold !important;
-        font-family: 'Varela Round', sans-serif !important;
-        font-size: 15px !important;
-        padding: 10px 24px !important;
-        border-radius: 6px !important;
-        width: 100% !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 2px 8px rgba(0, 174, 235, 0.1) !important;
-    }
-    
-    .stFileUploader button:hover {
-        background-color: #00aeeb !important;
-        color: #ffffff !important;
-        box-shadow: 0 4px 12px rgba(0, 174, 235, 0.3) !important;
     }
 
     /* Label-Texte über den Feldern */
@@ -261,12 +207,8 @@ if pin_eingabe == KORREKTE_PIN:
     st.markdown('<div class="form-card">', unsafe_allow_html=True)
     st.markdown("<div class='section-title'>📂 Dokumente hochladen</div>", unsafe_allow_html=True)
     
-    # UNIVERSELLE HINWEISBOX (Garantiert perfekt lesbar auf allen Handys!)
-    st.markdown("""
-        <div class="custom-info-box">
-            💡 Dokumente oder Fotos können Sie ganz einfach direkt mit Ihrer Smartphone-Kamera aufnehmen.
-        </div>
-    """, unsafe_allow_html=True)
+    # Die gelbe Warnbox von Streamlit - mit über CSS erzwungenem tiefschwarzem Text!
+    st.info("💡 Dokumente oder Fotos können Sie ganz einfach direkt mit Ihrer Smartphone-Kamera aufnehmen.")
     
     police = st.file_uploader("Letzte Versicherungspolice *", type=["pdf", "png", "jpg", "jpeg"])
     fuehrerscheine = st.file_uploader("Führerschein Vorder- & Rückseite (aller Fahrer) *", type=["pdf", "png", "jpg", "jpeg"], accept_multiple_files=True)
