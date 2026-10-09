@@ -2,198 +2,333 @@ import streamlit as st
 import os
 from PIL import Image
 
-# 1. Seiteneinstellungen
+# 1. Seiteneinstellungen (Auf Smartphones optimiert)
 st.set_page_config(
     page_title="Tarifrechner Helfer - Patrick Grellner Finance", 
     page_icon="🚗", 
     layout="centered"
 )
 
-# Initialisierung des Session State NUR für die Upload-Keys, um Reruns zu überleben
-if 'driver_keys' not in st.session_state:
-    st.session_state['driver_keys'] = 1
-
-def add_driver():
-    st.session_state.driver_keys += 1
-
-# CSS-Block (unverändert zur Vorversion)
+# 2. BRANDING & SEAMLESS BORDER CSS (Garantiert eine glatte, durchgezogene Optik für alle Felder)
 st.markdown("""
-<style>
-    /* Grundlegende App-Styles */
+    <style>
+    /* Hintergrund zu 100% reinweiß */
     .stApp {
         background-color: #ffffff !important;
+        background-image: none !important;
         color: #2d3748 !important;
         font-family: 'Varela Round', 'Varela', sans-serif !important;
     }
+    
+    /* Hauptüberschrift in Ihrer originalen blauen Markenfarbe */
     .main-title {
-        font-family: 'Varela Round', sans-serif; color: #0b4aa0; font-weight: 700;
-        font-size: 2.2rem; text-align: center; margin-top: 10px; margin-bottom: 5px;
+        font-family: 'Varela Round', sans-serif;
+        color: #0b4aa0;
+        font-weight: 700;
+        font-size: 2.2rem;
+        text-align: center;
+        margin-top: 10px;
+        margin-bottom: 5px;
     }
+    
     .main-subtitle {
-        text-align: center; color: #718096; font-size: 1.1rem; margin-bottom: 20px;
+        text-align: center;
+        color: #718096;
+        font-size: 1.1rem;
+        margin-bottom: 20px;
     }
+    
+    /* Karten-Optik für die Abschnitte */
     .form-card {
-        background-color: #ffffff; padding: 24px; border-radius: 12px;
-        border: 1px solid #edf2f7; margin-bottom: 20px !important;
+        background-color: #ffffff;
+        padding: 24px;
+        border-radius: 12px;
+        border: 1px solid #edf2f7;
+        margin-bottom: 20px !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
     }
+    
+    /* Bereichsüberschriften */
     .section-title {
-        color: #0b4aa0; font-size: 1.3rem; font-weight: 600; margin-bottom: 18px;
-        border-bottom: 2px solid #00aeeb; padding-bottom: 8px;
+        color: #0b4aa0;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 18px;
+        border-bottom: 2px solid #00aeeb;
+        padding-bottom: 8px;
     }
-    label {
-        color: #0b4aa0 !important; font-weight: bold !important;
-        font-size: 0.95rem !important; margin-bottom: 6px !important;
+    
+    /* ========================================================================= */
+    /* UNIVERSELL LESBARE HINWEISBOX (HTML-KORREKTUR FÜR MOBILGERÄTE)             */
+    /* ========================================================================= */
+    .custom-info-box {
+        background-color: #ebf8ff !important;
+        border-left: 4px solid #00aeeb !important;
+        color: #2b6cb0 !important;
+        padding: 16px !important;
+        border-radius: 8px !important;
+        font-weight: bold !important;
+        font-size: 0.95rem !important;
+        margin-bottom: 20px !important;
+        line-height: 1.5 !important;
     }
-
-    /* --- FINALE KORREKTUR FÜR ALLE EINGABEFELDER --- */
+    
+    /* ========================================================================= */
+    /* EINHEITLICHE RÄNDER FÜR NORMALE EINGABEFELDER                             */
+    /* ========================================================================= */
     .stTextInput input, .stNumberInput input {
-        background-color: #ffffff !important; color: #0b4aa0 !important;
-        border: 2px solid #00aeeb !important; border-radius: 6px !important;
-        padding: 10px 14px !important; font-family: 'Varela Round', sans-serif !important;
-        font-weight: bold !important; transition: all 0.2s ease-in-out !important;
+        background-color: #ffffff !important;
+        color: #0b4aa0 !important;
+        border: 2px solid #00aeeb !important;
+        border-radius: 6px !important;
+        padding: 10px 14px !important;
+        font-family: 'Varela Round', sans-serif !important;
+        font-weight: bold !important;
+        outline: none !important;
+        box-shadow: none !important;
+        transition: all 0.2s ease-in-out !important;
     }
-    div[data-baseweb="select"] {
-        background-color: #ffffff !important; border: 2px solid #00aeeb !important;
-        border-radius: 6px !important; font-family: 'Varela Round', sans-serif !important;
+    
+    .stTextInput div[data-baseweb="input"], .stNumberInput div[data-baseweb="input"] {
+        border: none !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }
+    
+    /* KORREKTUR: SELECTBOXEN BEKOMMEN IHREN RAHMEN ZURÜCK (OHNE DOPPELTE LINIE)  */
+    .stSelectbox div[role="button"], 
+    .stSelectbox div[data-baseweb="select"], 
+    .stSelectbox [data-baseweb="select"] > div {
+        border: none !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+    
+    .stSelectbox [data-baseweb="select"] {
+        background-color: #ffffff !important;
+        border: 2px solid #00aeeb !important;
+        border-radius: 6px !important;
+        font-family: 'Varela Round', sans-serif !important;
+        font-weight: bold !important;
+        box-shadow: none !important;
+        outline: none !important;
+        padding: 2px 4px !important;
+    }
+    
+    /* Textfarbe in Auswahllisten erzwingen */
+    .stSelectbox span, .stSelectbox div {
+        color: #0b4aa0 !important;
         font-weight: bold !important;
     }
-    div[data-baseweb="select"] > div, div[data-baseweb="select"] > div > div {
-        background-color: #ffffff !important; color: #0b4aa0 !important;
-        font-weight: bold !important;
-    }
-    .stTextInput input:hover, .stNumberInput input:hover, div[data-baseweb="select"]:hover {
+    
+    /* HOVER- & FOKUS-EFFEKTE */
+    .stTextInput input:hover, .stNumberInput input:hover, .stSelectbox [data-baseweb="select"]:hover {
         border-color: #0b4aa0 !important;
     }
-    .stTextInput input:focus, .stNumberInput input:focus, div[data-baseweb="select"]:focus-within {
+    
+    .stTextInput input:focus, .stNumberInput input:focus, .stSelectbox [data-baseweb="select"]:focus {
         border-color: #0b4aa0 !important;
         box-shadow: 0 0 0 3px rgba(11, 74, 160, 0.2) !important;
     }
 
-    /* --- ÜBERARBEITETES DESIGN FÜR FILE UPLOADER --- */
-    [data-testid="stFileUploader"] {
-        border: 2px dashed #00aeeb; border-radius: 6px; padding: 20px;
-        text-align: center; background-color: #f7fcff;
+    /* KORREKTUR: UPLOADER-BOXEN KOMPLETT RÜCKSTANDSLOS ENTFERNEN                */
+    [data-testid="stFileUploader"], 
+    [data-testid="stFileUploader"] > div, 
+    [data-testid="stFileUploader"] section {
+        border: none !important;
+        box-shadow: none !important;
+        background-color: transparent !important;
+        background: transparent !important;
+        padding: 0px !important;
     }
-    [data-testid="stFileUploader"] label { color: #0b4aa0 !important; font-size: 1rem !important; }
-    [data-testid="stFileUploader"] button {
-        border: none; background-color: #00aeeb; color: white;
-        border-radius: 6px; padding: 8px 16px;
+    
+    [data-testid="stFileUploaderDropzone"] {
+        border: none !important;
+        background-color: transparent !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0px !important;
     }
-    [data-testid="stFileUploader"] button:hover { background-color: #0b4aa0; }
+    
+    [data-testid="stFileUploaderDropzone"] div, 
+    [data-testid="stFileUploaderDropzone"] span,
+    [data-testid="stFileUploaderDropzone"] svg {
+        display: none !important;
+    }
+    
+    /* Nur noch den schicken Button einblenden und perfekt stylen */
+    .stFileUploader button {
+        display: block !important;
+        background-color: #ffffff !important;
+        color: #00aeeb !important;
+        border: 2px solid #00aeeb !important;
+        font-weight: bold !important;
+        font-family: 'Varela Round', sans-serif !important;
+        font-size: 15px !important;
+        padding: 10px 24px !important;
+        border-radius: 6px !important;
+        width: 100% !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 2px 8px rgba(0, 174, 235, 0.1) !important;
+    }
+    
+    .stFileUploader button:hover {
+        background-color: #00aeeb !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(0, 174, 235, 0.3) !important;
+    }
+
+    /* Label-Texte über den Feldern */
+    label {
+        color: #0b4aa0 !important;
+        font-weight: bold !important;
+        font-size: 0.95rem !important;
+        margin-bottom: 6px !important;
+    }
     
     /* Premium Senden-Button */
     div.stButton > button:first-child {
-        background-color: #00aeeb !important; color: #ffffff !important; border: none !important;
-        font-weight: 600 !important; font-family: 'Varela Round', sans-serif !important;
-        border-radius: 6px !important; padding: 14px 40px !important; font-size: 16px !important;
-        width: 100% !important; transition: all 0.3s ease;
-        box-shadow: 0 4px 14px rgba(0, 174, 235, 0.2) !important; margin-bottom: 20px !important;
+        background-color: #00aeeb !important;
+        color: #ffffff !important;
+        border: none !important;
+        font-weight: 600 !important;
+        font-family: 'Varela Round', sans-serif !important;
+        border-radius: 6px !important;
+        padding: 14px 40px !important;
+        font-size: 16px !important;
+        width: 100% !important;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 14px rgba(0, 174, 235, 0.2) !important;
+        margin-bottom: 20px !important;
     }
+    
     div.stButton > button:first-child:hover {
         background-color: #0b4aa0 !important;
-        box-shadow: 0 6px 20px rgba(11, 74, 160, 0.3) !important; transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(11, 74, 160, 0.3) !important;
+        transform: translateY(-1px);
     }
-
-    /* --- SUB-HEADER FÜR DYNAMISCHE FAHRER --- */
-    .driver-header {
-        font-size: 1.1rem; font-weight: bold; color: #0b4aa0; margin-top: 20px;
-        margin-bottom: 10px; border-top: 1px solid #edf2f7; padding-top: 20px;
-    }
-</style>
+    </style>
 """, unsafe_allow_html=True)
 
-# 3. Logo & Titel
+# 3. Logo einbinden & zentrieren
 LOGO_DATEINAME = "pg-finance_Logo.jpg"
 if os.path.exists(LOGO_DATEINAME):
     logo = Image.open(LOGO_DATEINAME)
-    _, col2, _ = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.image(logo, use_container_width=True)
 else:
-    st.markdown("<h2 style='text-align: center;'>PATRICK GRELLNER FINANCE</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #0b4aa0; font-family: \"Varela Round\", sans-serif; letter-spacing: 1px;'>PATRICK GRELLNER FINANCE</h2>", unsafe_allow_html=True)
 
 st.markdown("<h1 class='main-title'>Datenerfassung</h1>", unsafe_allow_html=True)
 st.markdown("<p class='main-subtitle'>Schnell und sicher alle Daten für Ihre Autoversicherung einreichen</p>", unsafe_allow_html=True)
 
-# 4. PIN-Eingabe
-KORREKTE_PIN = "1234"
-with st.container():
-    st.markdown("<div class='form-card'><h3 style='font-size: 1.1rem; margin-bottom: 12px;'>🔑 Zugang freischalten</h3>", unsafe_allow_html=True)
-    pin_eingabe = st.text_input("PIN-Eingabe", type="password", label_visibility="collapsed", placeholder="Bitte PIN eingeben...")
-    st.markdown("</div>", unsafe_allow_html=True)
+# 4. Sicherheits-Schranke: Die Kunden-PIN
+KORREKTE_PIN = "1234" 
+
+st.markdown('<div class="form-card">', unsafe_allow_html=True)
+st.markdown("<h3 style='font-size: 1.1rem; color: #0b4aa0; margin-top: 0; margin-bottom: 12px;'>🔑 Zugang freischalten</h3>", unsafe_allow_html=True)
+pin_eingabe = st.text_input("PIN-Eingabe", type="password", label_visibility="collapsed", placeholder="Bitte PIN eingeben...")
+st.markdown('</div>', unsafe_allow_html=True)
 
 if pin_eingabe == KORREKTE_PIN:
     st.success("🔓 Zugang erfolgreich freigeschaltet.")
 
-    with st.container():
-        st.markdown("<div class='form-card'><div class='section-title'>👤 Persönliche Daten</div>", unsafe_allow_html=True)
-        col1, col2 = st.columns(2)
-        with col1:
-            name = st.text_input("Nachname *")
-            vorname = st.text_input("Vorname *")
-        with col2:
-            geburtsort = st.text_input("Geburtsort *")
-            familienstand = st.selectbox("Familienstand", ["Ledig", "Verheiratet", "Eingetragene Lebenspartnerschaft", "Geschieden", "Verwitwet"])
-        st.markdown('</div>', unsafe_allow_html=True)
+    # === KARTE 1: PERSÖNLICHE DATEN ===
+    st.markdown('<div class="form-card">', unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>👤 Persönliche Daten</div>", unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        name = st.text_input("Nachname *")
+        vorname = st.text_input("Vorname *")
+    with col2:
+        geburtsort = st.text_input("Geburtsort *")
+        familienstand = st.selectbox("Familienstand", ["Ledig", "Verheiratet", "Eingetragene Lebenspartnerschaft", "Geschieden", "Verwitwet"])
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    with st.container():
-        st.markdown("<div class='form-card'><div class='section-title'>🚘 Fahrzeug & Nutzung</div>", unsafe_allow_html=True)
-        fahrleistung = st.number_input("Jährliche Fahrleistung (in km) *", value=10000, step=1000)
-        km_stand = st.number_input("Aktueller Kilometerstand (bei älteren Fahrzeugen)", value=0, step=5000)
-        garage = st.selectbox("Abstellort des Fahrzeugs (Garage) *", ["Einzel-/Doppelgarage", "Tiefgarage", "Carport", "Privatgrundstück (befriedet)", "Straße / Laternenparker"])
-        st.markdown('</div>', unsafe_allow_html=True)
+    # === KARTE 2: FAHRZEUG ===
+    st.markdown('<div class="form-card">', unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>🚘 Fahrzeug & Nutzung</div>", unsafe_allow_html=True)
+    
+    fahrleistung = st.number_input("Jährliche Fahrleistung (in km) *", value=10000, step=1000)
+    km_stand = st.number_input("Aktueller Kilometerstand (bei älteren Fahrzeugen)", value=0, step=5000)
+    garage = st.selectbox("Abstellort des Fahrzeugs (Garage) *", ["Einzel-/Doppelgarage", "Tiefgarage", "Carport", "Privatgrundstück (befriedet)", "Straße / Laternenparker"])
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    with st.container():
-        st.markdown("<div class='form-card'><div class='section-title'>📂 Dokumente hochladen</div>", unsafe_allow_html=True)
-        st.info("💡 Dokumente oder Fotos können Sie ganz einfach direkt mit Ihrer Smartphone-Kamera aufnehmen.")
-        
-        st.subheader("Letzte Versicherungspolice")
-        police = st.file_uploader("Police oder letzte Beitragsrechnung *", type=["pdf", "png", "jpg", "jpeg"], key="police")
+    # === KARTE 3: DOKUMENTE ===
+    st.markdown('<div class="form-card">', unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>📂 Dokumente hochladen</div>", unsafe_allow_html=True)
+    
+    # UNIVERSELLE HINWEISBOX (Garantiert perfekt lesbar auf allen Handys!)
+    st.markdown("""
+        <div class="custom-info-box">
+            💡 Dokumente oder Fotos können Sie ganz einfach direkt mit Ihrer Smartphone-Kamera aufnehmen.
+        </div>
+    """, unsafe_allow_html=True)
+    
+    police = st.file_uploader("Letzte Versicherungspolice *", type=["pdf", "png", "jpg", "jpeg"])
+    fuehrerscheine = st.file_uploader("Führerschein Vorder- & Rückseite (aller Fahrer) *", type=["pdf", "png", "jpg", "jpeg"], accept_multiple_files=True)
+    ausweise = st.file_uploader("Personalausweis Vorder- & Rückseite (aller Fahrer) *", type=["pdf", "png", "jpg", "jpeg"], accept_multiple_files=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-        uploaded_files = {'fuehrerscheine': [], 'ausweise': []}
-        all_driver_docs_uploaded = True
+    # Pflichtfelder prüfen
+    pflichtfelder_ausgefuellt = name and vorname and geburtsort and police and fuehrerscheine and ausweise
 
-        for i in range(st.session_state.driver_keys):
-            driver_num = i + 1
-            st.markdown(f"<div class='driver-header'>Fahrer {driver_num}</div>", unsafe_allow_html=True)
-            st.subheader("Führerschein")
-            fs_col1, fs_col2 = st.columns(2)
-            fs_vorder = fs_col1.file_uploader(f"Vorderseite 📎", key=f"fs_vorder_{driver_num}")
-            fs_rueck = fs_col2.file_uploader(f"Rückseite 📎", key=f"fs_rueck_{driver_num}")
-            st.subheader("Personalausweis")
-            pa_col1, pa_col2 = st.columns(2)
-            pa_vorder = pa_col1.file_uploader(f"Vorderseite 📎", key=f"pa_vorder_{driver_num}")
-            pa_rueck = pa_col2.file_uploader(f"Rückseite 📎", key=f"pa_rueck_{driver_num}")
-
-            if driver_num == 1 and not (fs_vorder and fs_rueck and pa_vorder and pa_rueck):
-                all_driver_docs_uploaded = False
-            
-            for doc in [fs_vorder, fs_rueck]:
-                if doc: uploaded_files['fuehrerscheine'].append(doc)
-            for doc in [pa_vorder, pa_rueck]:
-                if doc: uploaded_files['ausweise'].append(doc)
-
-        if st.button("Weiteren Fahrer hinzufügen", on_click=add_driver):
-            pass
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    pflichtfelder_ausgefuellt = name and vorname and geburtsort and police and all_driver_docs_uploaded
     if pflichtfelder_ausgefuellt:
         if st.button("DATEN JETZT SICHER ÜBERTRAGEN", type="primary"):
+            
+            # Ordnerstruktur erstellen
+            ordner_name = f"Kunde_{name}_{vorname}"
+            if not os.path.exists(ordner_name):
+                os.makedirs(ordner_name)
+            
+            # Dateien speichern
+            if police:
+                with open(os.path.join(ordner_name, f"Police_{police.name}"), "wb") as f:
+                    f.write(police.getbuffer())
+            
+            for i, fs in enumerate(fuehrerscheine):
+                with open(os.path.join(ordner_name, f"FS_{i}_{fs.name}"), "wb") as f:
+                    f.write(fs.getbuffer())
+
+            for i, aus in enumerate(ausweise):
+                with open(os.path.join(ordner_name, f"Ausweis_{i}_{aus.name}"), "wb") as f:
+                    f.write(aus.getbuffer())
+
+            # Formatierte Textdatei für Ihr Copy-Paste erzeugen
+            infotext = f"""=== KUNDENDATEN FÜR NAFI / COMPARIT ===
+Name: {name}
+Vorname: {vorname}
+Geburtsort: {geburtsort}
+Familienstand: {familienstand}
+----------------------------------------
+Fahrleistung: {fahrleistung} km/Jahr
+Aktueller KM-Stand: {km_stand} km
+Garage: {garage}
+========================================"""
+
+            with open(os.path.join(ordner_name, "Kopier_Vorlage.txt"), "w", encoding="utf-8") as f:
+                f.write(infotext)
+
             st.balloons()
             st.success("🎉 Übertragung erfolgreich! Ihre Daten wurden sicher an uns übermittelt.")
-    else:
-        st.warning("⚠️ Bitte füllen Sie alle mit * markierten Felder aus und laden Sie die Pflicht-Dokumente hoch, um die Übertragung zu starten.")
+            
+            # Der fertige Kopierbereich für Sie
+            st.write("---")
+            st.subheader("📋 Kopierbereich für das Maklerbüro")
+            st.code(infotext, language="text")
 
-    # 6. STIMMUNGSBILD GANZ UNTEN (MIT FEHLERMELDUNG)
+    else:
+        st.warning("⚠️ Bitte füllen Sie alle mit * markierten Felder aus und laden Sie die Dokumente hoch, um die Übertragung zu starten.")
+
+    # 6. STIMMUNGSBILD GANZ UNTEN
     THEME_BILD = "pg-finance-theme.jpg"
     if os.path.exists(THEME_BILD):
-        st.image(Image.open(THEME_BILD), use_container_width=True)
-    else:
-        st.info(f"Hinweis: Das Stimmungsbild '{THEME_BILD}' wurde nicht gefunden und kann daher nicht angezeigt werden. Bitte stellen Sie sicher, dass es sich im selben Ordner wie das Skript befindet.")
+        theme_img = Image.open(THEME_BILD)
+        st.image(theme_img, use_container_width=True)
 
 else:
     if pin_eingabe != "":
         st.error("❌ Falsche PIN. Bitte prüfen Sie Ihre Eingabe.")
-
