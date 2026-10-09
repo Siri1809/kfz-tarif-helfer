@@ -206,8 +206,9 @@ st.markdown("<p class='main-subtitle'>Schnell und sicher alle Daten für Ihre Au
 # 4. Sicherheits-Schranke: Die Kunden-PIN
 KORREKTE_PIN = "1234" 
 
-st.markdown("""'<div class="form-card">'
-                <span class="card-header">Persönliche Daten</span>
+st.markdown("""
+    <div class="form-card">
+        <span class="card-header">Zugang freischalten</span>
 """, unsafe_allow_html=True)
 pin_eingabe = st.text_input("PIN-Eingabe", type="password", label_visibility="collapsed", placeholder="Bitte PIN eingeben...")
 st.markdown('</div>', unsafe_allow_html=True)
