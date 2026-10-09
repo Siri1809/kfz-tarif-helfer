@@ -39,7 +39,7 @@ def read_excel_from_onedrive(token):
         url = "https://graph.microsoft.com/v1.0/me/drive/special/approot:/kunden_pins.xlsx:/content"
         headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(url, headers=headers)
-        if response.status_status == 200:
+        if response.status_code == 200:
             df = pd.read_excel(BytesIO(response.content))
             # Konvertiert die Tabelle in das gewohnte Datenbank-Format
             datenbank = {}
