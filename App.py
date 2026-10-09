@@ -9,7 +9,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. BRANDING, SEAMLESS CARD & SPACING CSS
+# 2. BRANDING, SEAMLESS CARD, SPACING & DEEP MOBILE CONTRAST FIX CSS
 st.markdown("""
     <style>
     /* Hintergrund zu 100% reinweiß */
@@ -119,6 +119,48 @@ st.markdown("""
         box-shadow: 0 0 0 3px rgba(11, 74, 160, 0.2) !important;
     }
 
+    /* ========================================================================= */
+    /* KORREKTUR: ZWINGT MOBILE BROWSER ZU DEZENTEN GRAU-BLAUEN KONTRASTEN        */
+    /* ========================================================================= */
+    
+    /* Zerstört das von Handys erzwungene harte schwarze Kontrast-Design komplett */
+    select, button, input, div[role="button"], svg, [data-baseweb="icon"] {
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
+    }
+
+    /* Färbt alle Plus/Minus-Symbole und Dropdown-Pfeile GARANTIERT in dezentem Grau-Blau */
+    svg, 
+    [data-baseweb="icon"] svg, 
+    .stNumberInput button svg, 
+    [data-testid="InputInstruction"] {
+        fill: #718096 !important;
+        color: #718096 !important;
+    }
+
+    /* Setzt das Aussehen der Plus/Minus-Knöpfe bei Zahlenfeldern auf weiches Hellgrau */
+    .stNumberInput button {
+        background-color: #f7fafc !important;
+        border: 1px solid #cbd5e0 !important;
+        color: #718096 !important;
+        border-radius: 4px !important;
+        font-weight: bold !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .stNumberInput button:hover {
+        background-color: #e2e8f0 !important;
+        color: #0b4aa0 !important;
+    }
+
+    /* Dropdown-Pfeil (Auswahllisten) farblich perfekt dämpfen */
+    [data-baseweb="icon"] {
+        color: #718096 !important;
+    }
+
+    /* ========================================================================= */
+
     /* Gestaltete Uploader-Boxen passend zum Design */
     [data-testid="stFileUploaderDropzone"] {
         border: 2px dashed #00aeeb !important;
@@ -203,12 +245,12 @@ else:
 st.markdown("<h1 class='main-title'>Datenerfassung</h1>", unsafe_allow_html=True)
 st.markdown("<p class='main-subtitle'>Schnell und sicher alle Daten für Ihre Autoversicherung einreichen</p>", unsafe_allow_html=True)
 
-# 4. Sicherheits-Schranke: Die Kunden-PIN
+# 4. Sicherheits-Schranke: Die Kunden-PIN (Eingebettet in form-card)
 KORREKTE_PIN = "1234" 
 
 st.markdown("""
     <div class="form-card">
-        <span class="card-header">Zugang freischalten</span>
+        <span class="card-header">🔑 Zugang freischalten</span>
 """, unsafe_allow_html=True)
 pin_eingabe = st.text_input("PIN-Eingabe", type="password", label_visibility="collapsed", placeholder="Bitte PIN eingeben...")
 st.markdown('</div>', unsafe_allow_html=True)
@@ -216,10 +258,10 @@ st.markdown('</div>', unsafe_allow_html=True)
 if pin_eingabe == KORREKTE_PIN:
     st.success("🔓 Zugang erfolgreich freigeschaltet.")
 
-    # === KARTE 1: PERSÖNLICHE DATEN (Überschrift als HTML direkt in der Karte!) ===
+    # === KARTE 1: PERSÖNLICHE DATEN ===
     st.markdown("""
         <div class="form-card">
-            <span class="card-header">Persönliche Daten</span>
+            <span class="card-header">👤 Persönliche Daten</span>
     """, unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
@@ -231,10 +273,10 @@ if pin_eingabe == KORREKTE_PIN:
         familienstand = st.selectbox("Familienstand", ["Ledig", "Verheiratet", "Eingetragene Lebenspartnerschaft", "Geschieden", "Verwitwet"])
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # === KARTE 2: FAHRZEUG (Überschrift als HTML direkt in der Karte!) ===
+    # === KARTE 2: FAHRZEUG ===
     st.markdown("""
         <div class="form-card">
-            <span class="card-header">Fahrzeug & Nutzung</span>
+            <span class="card-header">🚘 Fahrzeug & Nutzung</span>
     """, unsafe_allow_html=True)
     
     col_fz1, col_col2 = st.columns(2)
@@ -244,18 +286,18 @@ if pin_eingabe == KORREKTE_PIN:
     with col_col2:
         garage = st.selectbox("Abstellort des Fahrzeugs (Garage) *", ["Einzel-/Doppelgarage", "Tiefgarage", "Carport", "Privatgrundstück (befriedet)", "Straße / Laternenparker"])
     
-    st.write("") # Abstandhalter
+    st.write("") 
     fahrzeugschein = st.file_uploader("Fahrzeugschein hier hochladen/fotografieren *", type=["pdf", "png", "jpg", "jpeg"])
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # === KARTE 3: DOKUMENTE (Überschrift als HTML direkt in der Karte!) ===
+    # === KARTE 3: DOKUMENTE ===
     st.markdown("""
         <div class="form-card">
-            <span class="card-header">Dokumente hochladen</span>
+            <span class="card-header">📂 Dokumente hochladen</span>
     """, unsafe_allow_html=True)
     st.info("💡 Dokumente oder Fotos können Sie ganz einfach direkt mit Ihrer Smartphone-Kamera aufnehmen.")
     
-    st.write("") # Abstandhalter
+    st.write("") 
     police = st.file_uploader("Letzte Versicherungspolice hier hochladen/fotografieren *", type=["pdf", "png", "jpg", "jpeg"])
     
     # Führerschein: Zwei Spalten nebeneinander
