@@ -12,36 +12,46 @@ st.set_page_config(
     layout="centered"
 )
 
-# === MICROSOFT GRAPH API VERBINDUNG (FÜR ONEDRIVE) ===
-# Holt sich die sicheren Zugangsdaten aus dem Streamlit-Tresor
-CLIENT_ID = st.secrets["microsoft"]["client_id"]
-CLIENT_SECRET = st.secrets["microsoft"]["client_secret"]
-TENANT_ID = st.secrets["microsoft"]["tenant_id"]
+# === MICROSOFT GRAPH API VERBINDUNG (SCHARF GESCHALTET) ===
+try:
+    CLIENT_ID = st.secrets["microsoft"]["client_id"]
+    CLIENT_SECRET = st.secrets["microsoft"]["client_secret"]
+    TENANT_ID = st.secrets["microsoft"]["tenant_id"]
+except Exception:
+    st.error("🔑 Die Microsoft-Schlüssel fehlen im Streamlit-Tresor. Bitte tragen Sie diese in den Secrets ein!")
+    CLIENT_ID, CLIENT_SECRET, TENANT_ID = None, None, None
 
-@st.cache_data(ttl=60) # Cachet die PIN-Tabelle für 60 Sekunden, um nicht bei jedem Klick OneDrive abzufragen
 def get_onedrive_token():
     """Authentifiziert die App bei Microsoft Graph API."""
-    url = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token"
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    data = {
-        "client_id": CLIENT_ID,
-        "scope": "https://graph.microsoft.com/.default",
-        "client_secret": CLIENT_SECRET,
-        "grant_type": "client_credentials"
-    }
-    response = requests.post(url, headers=headers, data=data)
-    return response.json().get("access_token")
+    if not CLIENT_ID:
+        return None
+    try:
+        url = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token"
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        data = {
+            "client_id": CLIENT_ID,
+            "scope": "https://graph.microsoft.com/.default",
+            "client_secret": CLIENT_SECRET,
+            "grant_type": "client_credentials"
+        }
+        response = requests.post(url, headers=headers, data=data)
+        if response.status_code == 200:
+            return response.json().get("access_token")
+        else:
+            st.error(f"Microsoft Auth-Fehler: {response.json().get('error_description')}")
+    except Exception as e:
+        st.error(f"Verbindungsfehler zu Microsoft: {e}")
+    return None
 
 def read_excel_from_onedrive(token):
     """Liest die kunden_pins.xlsx aus dem geschützten OneDrive App-Ordner."""
     try:
-        # Pfad: OneDrive/Apps/PG Finance Tarifrechner/kunden_pins.xlsx
         url = "https://graph.microsoft.com/v1.0/me/drive/special/approot:/kunden_pins.xlsx:/content"
         headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(url, headers=headers)
+        
         if response.status_code == 200:
             df = pd.read_excel(BytesIO(response.content))
-            # Konvertiert die Tabelle in das gewohnte Datenbank-Format
             datenbank = {}
             for _, row in df.iterrows():
                 pin = str(row["PIN"]).strip()
@@ -51,6 +61,9 @@ def read_excel_from_onedrive(token):
                     "status": str(row.get("Status", "Bereit")).strip()
                 }
             return datenbank
+        elif response.status_code == 404:
+            # Ordner existiert, aber Excel-Datei fehlt noch
+            st.info("📂 OneDrive App-Ordner erfolgreich erstellt! Bitte laden Sie jetzt die Datei 'kunden_pins.xlsx' in Ihren neuen OneDrive-Ordner 'Apps/PG Finance Tarifrechner/' hoch.")
     except Exception as e:
         st.error(f"Fehler beim Laden der Excel-Datenbank: {e}")
     return {}
@@ -74,13 +87,11 @@ def update_excel_status_on_onedrive(token, pin_to_update):
             df = pd.read_excel(BytesIO(response.content))
             df.loc[df["PIN"].astype(str) == str(pin_to_update), "Status"] = "Ausgefüllt"
             
-            # Excel im Speicher neu schreiben
             output = BytesIO()
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
                 df.to_excel(writer, index=False)
             output.seek(0)
             
-            # Zurück zu OneDrive hochladen
             requests.put(url, headers=headers, data=output.getvalue())
     except Exception as e:
         pass
@@ -89,8 +100,8 @@ def update_excel_status_on_onedrive(token, pin_to_update):
 token = get_onedrive_token()
 KUNDEN_DATENBANK = read_excel_from_onedrive(token) if token else {}
 
-# Falls die Excel-Verbindung noch nicht steht, nutzen wir Ihre lokale Liste als sicheres Fallback!
-if not KUNDEN_DATENBANK:
+# Lokale Standardliste NUR aktiv, wenn absolut kein Token generiert werden konnte
+if not KUNDEN_DATENBANK and not token:
     KUNDEN_DATENBANK = {
         "pgffe": {"nachname": "Geck", "vorname": "Ramona", "status": "Bereit"},
         "011026": {"nachname": "Truetsch", "vorname": "Tobias", "status": "Bereit"},
@@ -100,7 +111,6 @@ if not KUNDEN_DATENBANK:
     }
 
 # 2. BRANDING, SEAMLESS CARD, SPACING & DEEP MOBILE CONTRAST FIX CSS
-# (Ihre CSS-Stile bleiben zu 100% unberührt!)
 st.markdown("""
     <style>
     .stApp {
@@ -238,7 +248,7 @@ st.markdown("""
         font-size: 16px !important;
         width: 100% !important;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 14 rgba(0, 174, 235, 0.2) !important;
+        box-shadow: 0 4px 14px rgba(0, 174, 235, 0.2) !important;
         margin-bottom: 20px !important;
     }
     div.stButton > button:first-child:hover {
@@ -292,7 +302,7 @@ if pin_eingabe in KUNDEN_DATENBANK and KUNDEN_DATENBANK[pin_eingabe].get("status
         familienstand = st.selectbox("Familienstand", ["Ledig", "Verheiratet", "Eingetragene Lebenspartnerschaft", "Geschieden", "Verwitwet"])
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # === KARTE 2: FAHRZEUG (Mit Kennzeichen & Neufahrzeug-Checkbox!) ===
+    # === KARTE 2: FAHRZEUG ===
     st.markdown("""
         <div class="form-card">
             <span class="card-header">Fahrzeug & Nutzung</span>
@@ -306,7 +316,6 @@ if pin_eingabe in KUNDEN_DATENBANK and KUNDEN_DATENBANK[pin_eingabe].get("status
         garage = st.selectbox("Abstellort des Fahrzeugs (Garage) *", ["Einzel-/Doppelgarage", "Tiefgarage", "Carport", "Privatgrundstück (befriedet)", "Straße / Laternenparker"])
     
     st.write("") 
-    # Kennzeichen & Neufahrzeug-Auswahl
     col_kz1, col_kz2 = st.columns([2, 1])
     with col_kz2:
         neufahrzeug = st.checkbox("Neufahrzeug", help="Aktivieren Sie dies, falls das Fahrzeug noch nicht zugelassen ist.")
@@ -354,15 +363,12 @@ if pin_eingabe in KUNDEN_DATENBANK and KUNDEN_DATENBANK[pin_eingabe].get("status
     if pflichtfelder_ausgefuellt:
         if st.button("DATEN JETZT SICHER ÜBERTRAGEN", type="primary"):
             
-            # Pfad-sicheres Kennzeichen erzeugen (Verhindert Sonderzeichen in Ordnernamen)
             safe_kz = kennzeichen.replace(" ", "-").replace("/", "-")
             ordner_name = f"Kunde_{name}_{vorname}_{safe_kz}"
             
-            # Lokales Backup erstellen
             if not os.path.exists(ordner_name):
                 os.makedirs(ordner_name)
 
-            # Formatierte Textdatei für Ihr Copy-Paste erzeugen
             infotext = f"""=== KUNDENDATEN FÜR NAFI / COMPARIT ===
 Name: {name}
 Vorname: {vorname}
@@ -381,39 +387,31 @@ Garage: {garage}
             # === ONEDRIVE HOCHLADEN-PROZESS ===
             if token:
                 with st.spinner("Dateien werden sicher auf Ihr OneDrive geladen..."):
-                    # 1. Textdatei hochladen
                     upload_file_to_onedrive(token, ordner_name, "Kopier_Vorlage.txt", infotext.encode("utf-8"))
                     
-                    # 2. Fahrzeugschein hochladen
                     if fahrzeugschein:
                         upload_file_to_onedrive(token, ordner_name, f"Fahrzeugschein_{fahrzeugschein.name}", fahrzeugschein.getbuffer())
                     
-                    # 3. Police hochladen
                     if police:
                         upload_file_to_onedrive(token, ordner_name, f"Police_{police.name}", police.getbuffer())
                         
-                    # 4. Führerscheine hochladen
                     if fs_vorderseite:
                         upload_file_to_onedrive(token, ordner_name, f"FS_Vorderseite_{fs_vorderseite.name}", fs_vorderseite.getbuffer())
                     if fs_rueckseite:
                         upload_file_to_onedrive(token, ordner_name, f"FS_Rueckseite_{fs_rueckseite.name}", fs_rueckseite.getbuffer())
                         
-                    # 5. Ausweise hochladen
                     if ausweis_vorderseite:
                         upload_file_to_onedrive(token, ordner_name, f"Ausweis_Vorderseite_{ausweis_vorderseite.name}", ausweis_vorderseite.getbuffer())
                     if ausweis_rueckseite:
                         upload_file_to_onedrive(token, ordner_name, f"Ausweis_Rueckseite_{ausweis_rueckseite.name}", ausweis_rueckseite.getbuffer())
                     
-                    # 6. Status in der OneDrive-Excel auf 'Ausgefüllt' setzen
                     update_excel_status_on_onedrive(token, pin_eingabe)
                     
                 st.balloons()
                 st.success("🎉 Übertragung erfolgreich! Alle Daten und Dokumente wurden sicher auf Ihrem OneDrive abgelegt.")
             else:
-                # Fallback, falls OneDrive-Schnittstelle noch nicht aktiv ist (lokales Speichern)
                 st.warning("⚠️ OneDrive Verbindung fehlgeschlagen. Daten wurden nur lokal auf dem Server gespeichert.")
 
-            # Der fertige Kopierbereich für Sie
             st.write("---")
             st.subheader("📋 Kopierbereich für das Maklerbüro")
             st.code(infotext, language="text")
