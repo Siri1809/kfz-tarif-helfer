@@ -9,7 +9,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. BRANDING & TEXT-KORREKTUR CSS
+# 2. BRANDING & MOBILE CONTRAST FIX CSS (Zwingt Handys zu dezenten, einheitlichen Farben)
 st.markdown("""
     <style>
     /* Hintergrund zu 100% reinweiß */
@@ -59,14 +59,6 @@ st.markdown("""
     }
     
     /* ========================================================================= */
-    /* KORREKTUR: TEXT IN DER GELBEN/BLAUEN INFOBOX TIEFSCHWARZ ERZWINGEN       */
-    /* ========================================================================= */
-    .stAlert p, .stAlert span, .stAlert div {
-        color: #1a1a1a !important; /* Erzwingt tiefschwarzen, perfekt lesbaren Text auf allen Handys */
-        font-weight: bold !important;
-    }
-    
-    /* ========================================================================= */
     /* EINHEITLICHE RÄNDER FÜR NORMALE EINGABEFELDER                             */
     /* ========================================================================= */
     .stTextInput input, .stNumberInput input {
@@ -88,7 +80,9 @@ st.markdown("""
         box-shadow: none !important;
     }
     
+    /* ========================================================================= */
     /* KORREKTUR: SELECTBOXEN BEKOMMEN ENTLICH IHRE SEAMLESS OPTIK ZURÜCK        */
+    /* ========================================================================= */
     .stSelectbox div[role="button"], 
     .stSelectbox div[data-baseweb="select"], 
     .stSelectbox [data-baseweb="select"] > div {
@@ -115,14 +109,49 @@ st.markdown("""
         font-weight: bold !important;
     }
     
-    /* HOVER- & FOKUS-EFFEKTE */
-    .stTextInput input:hover, .stNumberInput input:hover, .stSelectbox [data-baseweb="select"]:hover {
-        border-color: #0b4aa0 !important;
+    /* ========================================================================= */
+    /* HANDY-FIX: ENTFERNT DAS SCHWARZE/KONTRASTREICHE SYSTEM-STYLING            */
+    /* ========================================================================= */
+    
+    /* Deaktiviert den erzwungenen Smartphone-Kontrast für Dropdowns, Knöpfe und Uploader */
+    select, button, input, div[role="button"], svg, .stFileUploader button {
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
     }
     
-    .stTextInput input:focus, .stNumberInput input:focus, .stSelectbox [data-baseweb="select"]:focus {
-        border-color: #0b4aa0 !important;
-        box-shadow: 0 0 0 3px rgba(11, 74, 160, 0.2) !important;
+    /* Die Symbole wie Pfeile (Dropdown) oder Plus/Minus (Zahlen) in dezentem, edlen Grau-Blau färben */
+    svg, [data-testid="InputInstruction"], .stNumberInput button svg, [data-baseweb="icon"] {
+        fill: #718096 !important;
+        color: #718096 !important;
+    }
+    
+    /* Die Plus/Minus-Tasten selbst dezent stylen, damit sie nicht Schwarz aufleuchten */
+    .stNumberInput button {
+        background-color: #f7fafc !important;
+        border: 1px solid #cbd5e0 !important;
+        color: #718096 !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .stNumberInput button:hover {
+        background-color: #e2e8f0 !important;
+        color: #0b4aa0 !important;
+    }
+    
+    /* Dateiuploader: Dateinamen und "Mülleimer-Symbole" farblich dämpfen */
+    [data-testid="stUploadedFile"] {
+        background-color: #f7fafc !important;
+        border: 1px solid #edf2f7 !important;
+        color: #4a5568 !important;
+    }
+
+    /* ========================================================================= */
+    /* INFOBOX TEXT-KORREKTUR                                                   */
+    /* ========================================================================= */
+    .stAlert p, .stAlert span, .stAlert div {
+        color: #1a1a1a !important;
+        font-weight: bold !important;
     }
 
     /* Label-Texte über den Feldern */
@@ -133,7 +162,7 @@ st.markdown("""
         margin-bottom: 6px !important;
     }
     
-    /* Premium Senden-Button */
+    /* Premium Senden-Button (Original-Cyan #00aeeb) */
     div.stButton > button:first-child {
         background-color: #00aeeb !important;
         color: #ffffff !important;
@@ -207,7 +236,7 @@ if pin_eingabe == KORREKTE_PIN:
     st.markdown('<div class="form-card">', unsafe_allow_html=True)
     st.markdown("<div class='section-title'>📂 Dokumente hochladen</div>", unsafe_allow_html=True)
     
-    # Die gelbe Warnbox von Streamlit - mit über CSS erzwungenem tiefschwarzem Text!
+    # Die gelbe Warnbox von Streamlit
     st.info("💡 Dokumente oder Fotos können Sie ganz einfach direkt mit Ihrer Smartphone-Kamera aufnehmen.")
     
     police = st.file_uploader("Letzte Versicherungspolice *", type=["pdf", "png", "jpg", "jpeg"])
