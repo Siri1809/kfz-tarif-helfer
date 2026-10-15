@@ -40,10 +40,10 @@ def get_onedrive_token():
         return None, f"Verbindungsfehler: {e}"
 
 def read_excel_from_onedrive(token):
-    """Liest die kunden_pins.xlsx aus dem geschützten OneDrive App-Ordner von Simon."""
+    """Liest die kunden_pins.xlsx aus dem Standard-OneDrive-Ordner von Simon."""
     try:
-        # KORREKTUR: Wir nutzen 'users/EMAIL' kombiniert mit der sicheren 'approot'!
-        url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/special/approot:/kunden_pins.xlsx:/content"
+        # KORREKTUR: Wir greifen über das universelle 'drive/root' direkt auf Ihren Standardordner zu!
+        url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/root:/PG_Finance_Tarifrechner/kunden_pins.xlsx:/content"
         headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(url, headers=headers)
         
@@ -59,15 +59,16 @@ def read_excel_from_onedrive(token):
                 }
             return datenbank, None
         elif response.status_code == 404:
-            return {}, f"Datei nicht gefunden (404). Bitte laden Sie 'kunden_pins.xlsx' in den neu erstellten Ordner 'Anwendungen/PG Finance Tarifrechner/' auf Simons OneDrive hoch."
+            return {}, f"Ordner oder Datei nicht gefunden (404). Bitte erstellen Sie in Ihrem OneDrive unter 'Meine Dateien' den Ordner 'PG_Finance_Tarifrechner' und legen Sie die Datei 'kunden_pins.xlsx' dorthin."
         else:
             return {}, f"Fehler ({response.status_code}): {response.text}"
     except Exception as e:
         return {}, f"Exception: {e}"
 
 def upload_file_to_onedrive(token, folder_name, file_name, file_content):
-    """Lädt eine Datei in den spezifischen Kundenordner im App-Ordner von Simon hoch."""
-    url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/special/approot:/{folder_name}/{file_name}:/content"
+    """Lädt eine Datei in den spezifischen Kundenordner in Ihrem OneDrive hoch."""
+    # KORREKTUR: drive/root stattapproot
+    url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/root:/PG_Finance_Tarifrechner/{folder_name}/{file_name}:/content"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/octet-stream"
@@ -77,7 +78,7 @@ def upload_file_to_onedrive(token, folder_name, file_name, file_content):
 def update_excel_status_on_onedrive(token, pin_to_update):
     """Markiert den Kunden in der Excel-Tabelle automatisch als 'Ausgefüllt'."""
     try:
-        url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/special/approot:/kunden_pins.xlsx:/content"
+        url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/root:/PG_Finance_Tarifrechner/kunden_pins.xlsx:/content"
         headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
