@@ -12,8 +12,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# === KORREKTUR: DIE EXAKTE FIRMEN-E-MAIL FÜR IHR ONEDRIVE ===
-# Dadurch weiß Microsoft nun ganz genau, in welchem OneDrive der Ordner liegen soll!
+# === DIE FIRMEN-E-MAIL FÜR IHR ONEDRIVE ===
 USER_EMAIL = "s.seyschab@pg-finance.de"
 
 # === MICROSOFT GRAPH API VERBINDUNG ===
@@ -41,10 +40,10 @@ def get_onedrive_token():
         return None, f"Verbindungsfehler: {e}"
 
 def read_excel_from_onedrive(token):
-    """Liest die kunden_pins.xlsx aus dem OneDrive-Ordner 'PG_Finance_Tarifrechner'."""
+    """Liest die kunden_pins.xlsx aus dem geschützten OneDrive App-Ordner von Simon."""
     try:
-        # KORREKTUR: Wir nutzen nun users/{USER_EMAIL} und legen die Excel direkt in Ihren Hauptordner!
-        url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/root:/PG_Finance_Tarifrechner/kunden_pins.xlsx:/content"
+        # KORREKTUR: Wir nutzen 'users/EMAIL' kombiniert mit der sicheren 'approot'!
+        url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/special/approot:/kunden_pins.xlsx:/content"
         headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(url, headers=headers)
         
@@ -59,15 +58,16 @@ def read_excel_from_onedrive(token):
                     "status": str(row.get("Status", "Bereit")).strip()
                 }
             return datenbank, None
+        elif response.status_code == 404:
+            return {}, f"Datei nicht gefunden (404). Bitte laden Sie 'kunden_pins.xlsx' in den neu erstellten Ordner 'Anwendungen/PG Finance Tarifrechner/' auf Simons OneDrive hoch."
         else:
-            return {}, f"Excel-Ladefehle ({response.status_code}): {response.text}"
+            return {}, f"Fehler ({response.status_code}): {response.text}"
     except Exception as e:
-        return {}, f"Excel-Exception: {e}"
+        return {}, f"Exception: {e}"
 
 def upload_file_to_onedrive(token, folder_name, file_name, file_content):
-    """Lädt eine Datei in den spezifischen Kundenordner auf Ihrem OneDrive hoch."""
-    # KORREKTUR: users/{USER_EMAIL} statt 'me'
-    url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/root:/PG_Finance_Tarifrechner/{folder_name}/{file_name}:/content"
+    """Lädt eine Datei in den spezifischen Kundenordner im App-Ordner von Simon hoch."""
+    url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/special/approot:/{folder_name}/{file_name}:/content"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/octet-stream"
@@ -77,7 +77,7 @@ def upload_file_to_onedrive(token, folder_name, file_name, file_content):
 def update_excel_status_on_onedrive(token, pin_to_update):
     """Markiert den Kunden in der Excel-Tabelle automatisch als 'Ausgefüllt'."""
     try:
-        url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/root:/PG_Finance_Tarifrechner/kunden_pins.xlsx:/content"
+        url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/special/approot:/kunden_pins.xlsx:/content"
         headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
@@ -283,7 +283,6 @@ if is_using_backup:
         elif excel_error:
             st.success("Schritt 1: Microsoft-Anmeldung erfolgreich (Token generiert)!")
             st.error(f"Schritt 2: Excel-Tabelle auf OneDrive konnte nicht gelesen werden.\n{excel_error}")
-            st.info(f"💡 Bitte prüfen Sie, ob in Simons OneDrive der Ordner 'PG_Finance_Tarifrechner' angelegt ist und sich die Datei 'kunden_pins.xlsx' darin befindet.")
 
 # 4. Sicherheits-Schranke: Die Kunden-PIN
 st.markdown("""
