@@ -12,28 +12,34 @@ st.set_page_config(
     layout="centered"
 )
 
-# === MICROSOFT GRAPH API VERBINDUNG (ZURÜCK AUF APPROOT) ===
+# === MICROSOFT GRAPH API VERBINDUNG (MIT DEBBUGING-ANZEIGE) ===
 CLIENT_ID = st.secrets["microsoft"]["client_id"]
 CLIENT_SECRET = st.secrets["microsoft"]["client_secret"]
 TENANT_ID = st.secrets["microsoft"]["tenant_id"]
 
-@st.cache_data(ttl=60) # Cachet die PIN-Tabelle für 60 Sekunden
 def get_onedrive_token():
     """Authentifiziert die App bei Microsoft Graph API."""
-    url = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token"
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    data = {
-        "client_id": CLIENT_ID,
-        "scope": "https://graph.microsoft.com/.default",
-        "client_secret": CLIENT_SECRET,
-        "grant_type": "client_credentials"
-    }
-    response = requests.post(url, headers=headers, data=data)
-    return response.json().get("access_token")
+    try:
+        url = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token"
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        data = {
+            "client_id": CLIENT_ID,
+            "scope": "https://graph.microsoft.com/.default",
+            "client_secret": CLIENT_SECRET,
+            "grant_type": "client_credentials"
+        }
+        response = requests.post(url, headers=headers, data=data)
+        if response.status_code == 200:
+            return response.json().get("access_token"), None
+        else:
+            return None, f"Auth-Fehler ({response.status_code}): {response.json().get('error_description')}"
+    except Exception as e:
+        return None, f"Verbindungsfehler: {e}"
 
 def read_excel_from_onedrive(token):
     """Liest die kunden_pins.xlsx aus dem geschützten OneDrive App-Ordner."""
     try:
+        # Pfad: OneDrive/Apps/PG Finance Tarifrechner/kunden_pins.xlsx
         url = "https://graph.microsoft.com/v1.0/me/drive/special/approot:/kunden_pins.xlsx:/content"
         headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(url, headers=headers)
@@ -48,10 +54,11 @@ def read_excel_from_onedrive(token):
                     "vorname": str(row["Vorname"]).strip(),
                     "status": str(row.get("Status", "Bereit")).strip()
                 }
-            return datenbank
+            return datenbank, None
+        else:
+            return {}, f"Excel-Ladefehler ({response.status_code}): {response.text}"
     except Exception as e:
-        pass
-    return {}
+        return {}, f"Excel-Exception: {e}"
 
 def upload_file_to_onedrive(token, folder_name, file_name, file_content):
     """Lädt eine Datei in den spezifischen Kundenordner auf Ihrem OneDrive hoch."""
@@ -81,12 +88,18 @@ def update_excel_status_on_onedrive(token, pin_to_update):
     except Exception as e:
         pass
 
-# Token generieren und Datenbank laden
-token = get_onedrive_token()
-KUNDEN_DATENBANK = read_excel_from_onedrive(token) if token else {}
+# Token und Datenbank generieren (mit detaillierter Fehlerausgabe)
+token, auth_error = get_onedrive_token()
+KUNDEN_DATENBANK = {}
+excel_error = None
 
-# Lokale Standardliste als sicheres Fallback
+if token:
+    KUNDEN_DATENBANK, excel_error = read_excel_from_onedrive(token)
+
+# Falls OneDrive fehlschlägt, nutzen wir das lokale Backup
+is_using_backup = False
 if not KUNDEN_DATENBANK:
+    is_using_backup = True
     KUNDEN_DATENBANK = {
         "pgffe": {"nachname": "Geck", "vorname": "Ramona", "status": "Bereit"},
         "011026": {"nachname": "Truetsch", "vorname": "Tobias", "status": "Bereit"},
@@ -96,7 +109,6 @@ if not KUNDEN_DATENBANK:
     }
 
 # 2. BRANDING, SEAMLESS CARD, SPACING & DEEP MOBILE CONTRAST FIX CSS
-# (Ihre CSS-Stile bleiben zu 100% unberührt!)
 st.markdown("""
     <style>
     .stApp {
@@ -256,6 +268,20 @@ else:
 
 st.markdown("<h1 class='main-title'>Datenerfassung</h1>", unsafe_allow_html=True)
 st.markdown("<p class='main-subtitle'>Schnell und sicher alle Daten für Ihre Autoversicherung einreichen</p>", unsafe_allow_html=True)
+
+# =========================================================================
+# DIAGNOSE-ANZEIGE: Zeigt Ihnen live auf der Seite, wo OneDrive klemmt!
+# =========================================================================
+if is_using_backup:
+    st.warning("⚠️ Die App läuft aktuell im Sicherheits-Backup-Modus, da die Verbindung zu Ihrem OneDrive-Ordner blockiert ist.")
+    with st.expander("🔍 Technische Diagnose-Details anzeigen (Nur für Sie)"):
+        if auth_error:
+            st.error(f"Schritt 1: Microsoft-Anmeldung fehlgeschlagen.\n{auth_error}")
+        elif excel_error:
+            st.success("Schritt 1: Microsoft-Anmeldung erfolgreich (Token generiert)!")
+            st.error(f"Schritt 2: Excel-Tabelle auf OneDrive konnte nicht gelesen werden.\n{excel_error}")
+            st.info("💡 Bitte prüfen Sie, ob die Datei 'kunden_pins.xlsx' im Ordner 'Apps/PG Finance Tarifrechner/' liegt und die Spalten korrekt benannt sind.")
+# =========================================================================
 
 # 4. Sicherheits-Schranke: Die Kunden-PIN
 st.markdown("""
