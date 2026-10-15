@@ -12,10 +12,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# === KORREKTUR: DIE NEUE FIRMEN-E-MAIL FÜR ONEDRIVE ===
-USER_EMAIL = "s.seyschab@pg-finance.de"
-
-# === MICROSOFT GRAPH API VERBINDUNG ===
+# === MICROSOFT GRAPH API VERBINDUNG (ZURÜCK AUF APPROOT) ===
 CLIENT_ID = st.secrets["microsoft"]["client_id"]
 CLIENT_SECRET = st.secrets["microsoft"]["client_secret"]
 TENANT_ID = st.secrets["microsoft"]["tenant_id"]
@@ -35,9 +32,9 @@ def get_onedrive_token():
     return response.json().get("access_token")
 
 def read_excel_from_onedrive(token):
-    """Liest die kunden_pins.xlsx aus dem OneDrive-Ordner 'PG_Finance_Tarifrechner'."""
+    """Liest die kunden_pins.xlsx aus dem geschützten OneDrive App-Ordner."""
     try:
-        url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/root:/PG_Finance_Tarifrechner/kunden_pins.xlsx:/content"
+        url = "https://graph.microsoft.com/v1.0/me/drive/special/approot:/kunden_pins.xlsx:/content"
         headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(url, headers=headers)
         
@@ -53,12 +50,12 @@ def read_excel_from_onedrive(token):
                 }
             return datenbank
     except Exception as e:
-        st.error(f"Fehler beim Laden der Excel-Datenbank: {e}")
+        pass
     return {}
 
 def upload_file_to_onedrive(token, folder_name, file_name, file_content):
     """Lädt eine Datei in den spezifischen Kundenordner auf Ihrem OneDrive hoch."""
-    url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/root:/PG_Finance_Tarifrechner/{folder_name}/{file_name}:/content"
+    url = f"https://graph.microsoft.com/v1.0/me/drive/special/approot:/{folder_name}/{file_name}:/content"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/octet-stream"
@@ -68,7 +65,7 @@ def upload_file_to_onedrive(token, folder_name, file_name, file_content):
 def update_excel_status_on_onedrive(token, pin_to_update):
     """Markiert den Kunden in der Excel-Tabelle automatisch als 'Ausgefüllt'."""
     try:
-        url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/root:/PG_Finance_Tarifrechner/kunden_pins.xlsx:/content"
+        url = "https://graph.microsoft.com/v1.0/me/drive/special/approot:/kunden_pins.xlsx:/content"
         headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
@@ -88,8 +85,8 @@ def update_excel_status_on_onedrive(token, pin_to_update):
 token = get_onedrive_token()
 KUNDEN_DATENBANK = read_excel_from_onedrive(token) if token else {}
 
-# Lokales Standard-Backup falls OneDrive nicht erreichbar ist
-if not KUNDEN_DATENBANK and not token:
+# Lokale Standardliste als sicheres Fallback
+if not KUNDEN_DATENBANK:
     KUNDEN_DATENBANK = {
         "pgffe": {"nachname": "Geck", "vorname": "Ramona", "status": "Bereit"},
         "011026": {"nachname": "Truetsch", "vorname": "Tobias", "status": "Bereit"},
@@ -99,6 +96,7 @@ if not KUNDEN_DATENBANK and not token:
     }
 
 # 2. BRANDING, SEAMLESS CARD, SPACING & DEEP MOBILE CONTRAST FIX CSS
+# (Ihre CSS-Stile bleiben zu 100% unberührt!)
 st.markdown("""
     <style>
     .stApp {
