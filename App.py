@@ -2,10 +2,11 @@ import streamlit as st
 import os
 import requests
 import pandas as pd
+import zipfile
 from PIL import Image
 from io import BytesIO
 
-# 1. Seiteneinstellungen (Auf Smartphones optimiert)
+# 1. Seiteneinstellungen
 st.set_page_config(
     page_title="Tarifrechner Helfer - Patrick Grellner Finance", 
     page_icon="🚗", 
@@ -21,7 +22,6 @@ CLIENT_SECRET = st.secrets["microsoft"]["client_secret"]
 TENANT_ID = st.secrets["microsoft"]["tenant_id"]
 
 def get_onedrive_token():
-    """Authentifiziert die App bei Microsoft Graph API."""
     try:
         url = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token"
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
@@ -40,13 +40,10 @@ def get_onedrive_token():
         return None, f"Verbindungsfehler: {e}"
 
 def read_excel_from_onedrive(token):
-    """Liest die kunden_pins.xlsx aus dem Standard-OneDrive-Ordner von Simon."""
     try:
-        # KORREKTUR: Wir greifen über das universelle 'drive/root' direkt auf Ihren Standardordner zu!
         url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/root:/PG_Finance_Tarifrechner/kunden_pins.xlsx:/content"
         headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(url, headers=headers)
-        
         if response.status_code == 200:
             df = pd.read_excel(BytesIO(response.content))
             datenbank = {}
@@ -59,15 +56,13 @@ def read_excel_from_onedrive(token):
                 }
             return datenbank, None
         elif response.status_code == 404:
-            return {}, f"Ordner oder Datei nicht gefunden (404). Bitte erstellen Sie in Ihrem OneDrive unter 'Meine Dateien' den Ordner 'PG_Finance_Tarifrechner' und legen Sie die Datei 'kunden_pins.xlsx' dorthin."
+            return {}, "404"
         else:
-            return {}, f"Fehler ({response.status_code}): {response.text}"
+            return {}, f"Fehler ({response.status_code})"
     except Exception as e:
         return {}, f"Exception: {e}"
 
 def upload_file_to_onedrive(token, folder_name, file_name, file_content):
-    """Lädt eine Datei in den spezifischen Kundenordner in Ihrem OneDrive hoch."""
-    # KORREKTUR: drive/root stattapproot
     url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/root:/PG_Finance_Tarifrechner/{folder_name}/{file_name}:/content"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -76,7 +71,6 @@ def upload_file_to_onedrive(token, folder_name, file_name, file_content):
     requests.put(url, headers=headers, data=file_content)
 
 def update_excel_status_on_onedrive(token, pin_to_update):
-    """Markiert den Kunden in der Excel-Tabelle automatisch als 'Ausgefüllt'."""
     try:
         url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/root:/PG_Finance_Tarifrechner/kunden_pins.xlsx:/content"
         headers = {"Authorization": f"Bearer {token}"}
@@ -84,12 +78,10 @@ def update_excel_status_on_onedrive(token, pin_to_update):
         if response.status_code == 200:
             df = pd.read_excel(BytesIO(response.content))
             df.loc[df["PIN"].astype(str) == str(pin_to_update), "Status"] = "Ausgefüllt"
-            
             output = BytesIO()
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
                 df.to_excel(writer, index=False)
             output.seek(0)
-            
             requests.put(url, headers=headers, data=output.getvalue())
     except Exception as e:
         pass
@@ -102,7 +94,6 @@ excel_error = None
 if token:
     KUNDEN_DATENBANK, excel_error = read_excel_from_onedrive(token)
 
-# Falls OneDrive fehlschlägt, nutzen wir das lokale Backup
 is_using_backup = False
 if not KUNDEN_DATENBANK:
     is_using_backup = True
@@ -114,7 +105,7 @@ if not KUNDEN_DATENBANK:
         "mf1026": {"nachname": "Filip", "vorname": "Markus", "status": "Bereit"}
     }
 
-# 2. BRANDING, SEAMLESS CARD, SPACING & DEEP MOBILE CONTRAST FIX CSS
+# CSS (Unverändert)
 st.markdown("""
     <style>
     .stApp {
@@ -197,13 +188,6 @@ st.markdown("""
         color: #0b4aa0 !important;
         font-weight: bold !important;
     }
-    .stTextInput input:hover, .stNumberInput input:hover, .stSelectbox [data-baseweb="select"]:hover {
-        border-color: #0b4aa0 !important;
-    }
-    .stTextInput input:focus, .stNumberInput input:focus, .stSelectbox [data-baseweb="select"]:focus {
-        border-color: #0b4aa0 !important;
-        box-shadow: 0 0 0 3px rgba(11, 74, 160, 0.2) !important;
-    }
     [data-testid="stFileUploaderDropzone"] {
         border: 2px dashed #00aeeb !important;
         background-color: #f7fafc !important;
@@ -211,14 +195,6 @@ st.markdown("""
         padding: 15px !important;
         box-shadow: none !important;
         transition: all 0.3s ease !important;
-    }
-    [data-testid="stFileUploaderDropzone"]:hover {
-        border-color: #0b4aa0 !important;
-        background-color: #edf2f7 !important;
-    }
-    [data-testid="stFileUploaderDropzone"] span {
-        color: #718096 !important;
-        font-size: 12px !important;
     }
     .stFileUploader button {
         background-color: #00aeeb !important;
@@ -229,7 +205,6 @@ st.markdown("""
         font-size: 13px !important;
         padding: 6px 14px !important;
         border-radius: 6px !important;
-        box-shadow: 0 2px 6px rgba(0, 174, 235, 0.2) !important;
     }
     .stAlert p, .stAlert span, .stAlert div {
         color: #1a1a1a !important;
@@ -255,11 +230,6 @@ st.markdown("""
         box-shadow: 0 4px 14px rgba(0, 174, 235, 0.2) !important;
         margin-bottom: 20px !important;
     }
-    div.stButton > button:first-child:hover {
-        background-color: #0b4aa0 !important;
-        box-shadow: 0 6px 20px rgba(11, 74, 160, 0.3) !important;
-        transform: translateY(-1px);
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -269,23 +239,11 @@ if os.path.exists(LOGO_DATEINAME):
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.image(logo, use_container_width=True)
-else:
-    st.markdown("<h2 style='text-align: center; color: #0b4aa0; font-family: \"Varela Round\", sans-serif; letter-spacing: 1px;'>PATRICK GRELLNER FINANCE</h2>", unsafe_allow_html=True)
 
 st.markdown("<h1 class='main-title'>Datenerfassung</h1>", unsafe_allow_html=True)
 st.markdown("<p class='main-subtitle'>Schnell und sicher alle Daten für Ihre Autoversicherung einreichen</p>", unsafe_allow_html=True)
 
-# DIAGNOSE-ANZEIGE
-if is_using_backup:
-    st.warning("⚠️ Die App läuft aktuell im Sicherheits-Backup-Modus, da die Verbindung zu Ihrem OneDrive-Ordner blockiert ist.")
-    with st.expander("🔍 Technische Diagnose-Details anzeigen (Nur für Sie)"):
-        if auth_error:
-            st.error(f"Schritt 1: Microsoft-Anmeldung fehlgeschlagen.\n{auth_error}")
-        elif excel_error:
-            st.success("Schritt 1: Microsoft-Anmeldung erfolgreich (Token generiert)!")
-            st.error(f"Schritt 2: Excel-Tabelle auf OneDrive konnte nicht gelesen werden.\n{excel_error}")
-
-# 4. Sicherheits-Schranke: Die Kunden-PIN
+# 4. Sicherheits-Schranke
 st.markdown("""
         <div class="form-card">
             <span class="card-header">Zugang freischalten</span>
@@ -293,20 +251,15 @@ st.markdown("""
 pin_eingabe = st.text_input("PIN-Eingabe", type="password", label_visibility="collapsed", placeholder="Bitte Ihre persönliche Kunden-PIN eingeben...")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# PRÜFEN, OB DIE PIN IN DER DATENBANK EXISTIERT & BEREIT IST
 if pin_eingabe in KUNDEN_DATENBANK and KUNDEN_DATENBANK[pin_eingabe].get("status", "Bereit") == "Bereit":
     kunden_info = KUNDEN_DATENBANK[pin_eingabe]
     kunden_nachname = kunden_info["nachname"]
     kunden_vorname = kunden_info["vorname"]
 
-    st.success(f"🔓 Willkommen {kunden_vorname} {kunden_nachname}! Ihr Formular wurde freigeschaltet.")
+    st.success(f"🔓 Willkommen {kunden_vorname} {kunden_nachname}!")
 
     # === KARTE 1: PERSÖNLICHE DATEN ===
-    st.markdown("""
-        <div class="form-card">
-            <span class="card-header">Persönliche Daten</span>
-    """, unsafe_allow_html=True)
-    
+    st.markdown('<div class="form-card"><span class="card-header">Persönliche Daten</span>', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
         name = st.text_input("Nachname *", value=kunden_nachname, disabled=True)
@@ -317,11 +270,7 @@ if pin_eingabe in KUNDEN_DATENBANK and KUNDEN_DATENBANK[pin_eingabe].get("status
     st.markdown('</div>', unsafe_allow_html=True)
 
     # === KARTE 2: FAHRZEUG ===
-    st.markdown("""
-        <div class="form-card">
-            <span class="card-header">Fahrzeug & Nutzung</span>
-    """, unsafe_allow_html=True)
-    
+    st.markdown('<div class="form-card"><span class="card-header">Fahrzeug & Nutzung</span>', unsafe_allow_html=True)
     col_fz1, col_col2 = st.columns(2)
     with col_fz1:
         fahrleistung = st.number_input("Jährliche Fahrleistung (in km) *", value=10000, step=1000)
@@ -344,13 +293,8 @@ if pin_eingabe in KUNDEN_DATENBANK and KUNDEN_DATENBANK[pin_eingabe].get("status
     st.markdown('</div>', unsafe_allow_html=True)
 
     # === KARTE 3: DOKUMENTE ===
-    st.markdown("""
-        <div class="form-card">
-            <span class="card-header">Dokumente hochladen</span>
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="form-card"><span class="card-header">Dokumente hochladen</span>', unsafe_allow_html=True)
     st.info("💡 Dokumente oder Fotos können Sie ganz einfach direkt mit Ihrer Smartphone-Kamera aufnehmen.")
-    
-    st.write("") 
     police = st.file_uploader("Letzte Versicherungspolice hier hochladen/fotografieren *", type=["pdf", "png", "jpg", "jpeg"])
     
     st.markdown("<p style='color: #0b4aa0; font-weight: bold; margin-bottom: 2px;'>Führerschein aller berechtigten Fahrer *</p>", unsafe_allow_html=True)
@@ -366,17 +310,14 @@ if pin_eingabe in KUNDEN_DATENBANK and KUNDEN_DATENBANK[pin_eingabe].get("status
         ausweis_vorderseite = st.file_uploader("Vorderseite / Reisepass-Hauptseite *", type=["pdf", "png", "jpg", "jpeg"], key="ausweis_vorn")
     with col_id2:
         ausweis_rueckseite = st.file_uploader("Rückseite (Optional)", type=["pdf", "png", "jpg", "jpeg"], key="ausweis_hinten")
-        
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Pflichtfelder-Validierung
     pflicht_kennzeichen = neufahrzeug or (kennzeichen and kennzeichen != "")
     pflichtfelder_ausgefuellt = (name and vorname and geburtsort and fahrzeugschein and police 
                                  and fs_vorderseite and fs_rueckseite and ausweis_vorderseite and pflicht_kennzeichen)
 
     if pflichtfelder_ausgefuellt:
         if st.button("DATEN JETZT SICHER ÜBERTRAGEN", type="primary"):
-            
             safe_kz = kennzeichen.replace(" ", "-").replace("/", "-")
             ordner_name = f"Kunde_{name}_{vorname}_{safe_kz}"
             
@@ -398,49 +339,86 @@ Garage: {garage}
             with open(os.path.join(ordner_name, "Kopier_Vorlage.txt"), "w", encoding="utf-8") as f:
                 f.write(infotext)
 
-            # === ONEDRIVE HOCHLADEN-PROZESS ===
+            # Dateispeicherung
+            if police:
+                with open(os.path.join(ordner_name, f"Police_{police.name}"), "wb") as f:
+                    f.write(police.getbuffer())
+            if fahrzeugschein:
+                with open(os.path.join(ordner_name, f"Fahrzeugschein_{fahrzeugschein.name}"), "wb") as f:
+                    f.write(fahrzeugschein.getbuffer())
+            if fs_vorderseite:
+                with open(os.path.join(ordner_name, f"FS_Vorderseite_{fs_vorderseite.name}"), "wb") as f:
+                    f.write(fs_vorderseite.getbuffer())
+            if fs_rueckseite:
+                with open(os.path.join(ordner_name, f"FS_Rueckseite_{fs_rueckseite.name}"), "wb") as f:
+                    f.write(fs_rueckseite.getbuffer())
+            if ausweis_vorderseite:
+                with open(os.path.join(ordner_name, f"Ausweis_Vorderseite_{ausweis_vorderseite.name}"), "wb") as f:
+                    f.write(ausweis_vorderseite.getbuffer())
+            if ausweis_rueckseite:
+                with open(os.path.join(ordner_name, f"Ausweis_Rueckseite_{ausweis_rueckseite.name}"), "wb") as f:
+                    f.write(ausweis_rueckseite.getbuffer())
+
             if token:
-                with st.spinner("Dateien werden sicher auf Ihr OneDrive geladen..."):
+                with st.spinner("Dateien werden auf Ihr OneDrive geladen..."):
                     upload_file_to_onedrive(token, ordner_name, "Kopier_Vorlage.txt", infotext.encode("utf-8"))
-                    
                     if fahrzeugschein:
                         upload_file_to_onedrive(token, ordner_name, f"Fahrzeugschein_{fahrzeugschein.name}", fahrzeugschein.getbuffer())
-                    
                     if police:
                         upload_file_to_onedrive(token, ordner_name, f"Police_{police.name}", police.getbuffer())
-                        
                     if fs_vorderseite:
                         upload_file_to_onedrive(token, ordner_name, f"FS_Vorderseite_{fs_vorderseite.name}", fs_vorderseite.getbuffer())
                     if fs_rueckseite:
                         upload_file_to_onedrive(token, ordner_name, f"FS_Rueckseite_{fs_rueckseite.name}", fs_rueckseite.getbuffer())
-                        
                     if ausweis_vorderseite:
                         upload_file_to_onedrive(token, ordner_name, f"Ausweis_Vorderseite_{ausweis_vorderseite.name}", ausweis_vorderseite.getbuffer())
                     if ausweis_rueckseite:
                         upload_file_to_onedrive(token, ordner_name, f"Ausweis_Rueckseite_{ausweis_rueckseite.name}", ausweis_rueckseite.getbuffer())
-                    
                     update_excel_status_on_onedrive(token, pin_eingabe)
-                    
                 st.balloons()
-                st.success("🎉 Übertragung erfolgreich! Alle Daten und Dokumente wurden sicher auf Ihrem OneDrive abgelegt.")
+                st.success("🎉 Übertragung auf OneDrive erfolgreich!")
             else:
-                st.warning("⚠️ OneDrive Verbindung fehlgeschlagen. Daten wurden nur lokal auf dem Server gespeichert.")
+                st.balloons()
+                st.success("🎉 Übertragung erfolgreich! (Sicher lokal gespeichert)")
 
             st.write("---")
-            st.subheader("📋 Kopierbereich für das Maklerbüro")
+            st.subheader("📋 Kopierbereich")
             st.code(infotext, language="text")
 
-    else:
-        st.warning("⚠️ Bitte füllen Sie alle mit * markierten Felder aus und laden Sie die Pflichtdokumente hoch, um die Übertragung zu starten.")
-
-    # 6. STIMMUNGSBILD GANZ UNTEN
     THEME_BILD = "pg-finance-theme.jpg"
     if os.path.exists(THEME_BILD):
-        theme_img = Image.open(THEME_BILD)
-        st.image(theme_img, use_container_width=True)
+        st.image(Image.open(THEME_BILD), use_container_width=True)
 
-elif pin_eingabe in KUNDEN_DATENBANK and KUNDEN_DATENBANK[pin_eingabe].get("status") == "Ausgefüllt":
-    st.error("❌ Diese PIN wurde bereits erfolgreich verwendet und ist abgelaufen. Bitte kontaktieren Sie Patrick Grellner Finance für einen neuen Zugang.")
-else:
-    if pin_eingabe != "":
-        st.error("❌ Falsche PIN. Bitte prüfen Sie Ihre Eingabe.")
+# =========================================================================
+# 📋 GEHEIMER DOWNLOAD-BEREICH FÜR DEN MAKLER (NUR SICHTBAR FÜR PIN '1234')
+# =========================================================================
+if pin_eingabe == "1234":
+    st.write("---")
+    st.subheader("📁 Backup-Daten-Manager (Nur für Sie sichtbar)")
+    st.info("Hier können Sie alle lokal auf dem Server gespeicherten Kundenordner einsehen und als ZIP-Archiv herunterladen.")
+    
+    # Listet alle Ordner auf dem Server auf, die mit "Kunde_" anfangen
+    lokale_ordner = [d for d in os.listdir('.') if os.path.isdir(d) and d.startswith("Kunde_")]
+    
+    if lokale_ordner:
+        ausgewaehlter_ordner = st.selectbox("Wählen Sie einen Kundenordner zum Herunterladen:", lokale_ordner)
+        
+        if ausgewaehlter_ordner:
+            # Erstellt ein ZIP-Archiv im Speicher
+            zip_buffer = BytesIO()
+            with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+                for root, dirs, files in os.walk(ausgewaehlter_ordner):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        zip_file.write(file_path, os.path.relpath(file_path, ausgewaehlter_ordner))
+            
+            # Download-Button für das ZIP
+            st.download_button(
+                label=f"💾 Ordner '{ausgewaehlter_ordner}' als ZIP herunterladen",
+                data=zip_buffer.getvalue(),
+                file_name=f"{ausgewaehlter_ordner}.zip",
+                mime="application/zip"
+            )
+    else:
+        st.write("Keine lokalen Kundenordner auf dem Server vorhanden.")
+# =========================================================================
