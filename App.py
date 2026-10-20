@@ -10,11 +10,6 @@ st.set_page_config(
     layout="centered"
 )
 
-# === DYNAMISCHE SHAREPOINT-PFAD-KONFIGURATION ===
-# Ermittelt aus Ihrem echten OneDrive-Freigabelink!
-SHAREPOINT_DOMAIN = "patrickgrellnerfinance-my.sharepoint.com"
-USER_PERSONAL_PATH = "s_seyschab_pg-finance_de"
-
 # === MICROSOFT GRAPH API VERBINDUNG ===
 CLIENT_ID = st.secrets["microsoft"]["client_id"]
 CLIENT_SECRET = st.secrets["microsoft"]["client_secret"]
@@ -38,24 +33,15 @@ def get_onedrive_token():
         pass
     return None
 
-def upload_file_to_sharepoint_personal(token, folder_name, file_name, file_content):
+def upload_file_to_sharepoint_root(token, folder_name, file_name, file_content):
     """
-    Nutzt die erteilte Sites.ReadWrite.All Berechtigung, um Dateien direkt im Hintergrund
-    in das persönliche OneDrive (SharePoint MySite) des Nutzers hochzuladen.
+    Lädt Dateien direkt in die Standard-Dokumentenbibliothek der Haupt-SharePoint-Seite (root-site) hoch.
+    Dies umgeht den spException-Fehler des persönlichen OneDrive-Ptofs im App-only-Modus.
     """
     try:
-        # 1. Holen der eindeutigen Site-ID für das persönliche SharePoint-Verzeichnis (MySite)
-        site_url = f"https://graph.microsoft.com/v1.0/sites/{SHAREPOINT_DOMAIN}:/personal/{USER_PERSONAL_PATH}"
-        headers = {"Authorization": f"Bearer {token}"}
+        # Wir nutzen die Root-Site, da diese bei jedem M365 Business Tenant standardmäßig aktiv ist
+        upload_url = f"https://graph.microsoft.com/v1.0/sites/root/drive/root:/{folder_name}/{file_name}:/content"
         
-        site_response = requests.get(site_url, headers=headers)
-        if site_response.status_code != 200:
-            return site_response  # Gibt den Fehler beim Finden der Site zurück
-            
-        site_id = site_response.json().get("id")
-        
-        # 2. Upload der Datei in die standardmäßige Dokumentenbibliothek der Site
-        upload_url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive/root:/{folder_name}/{file_name}:/content"
         headers_upload = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/octet-stream"
@@ -64,10 +50,9 @@ def upload_file_to_sharepoint_personal(token, folder_name, file_name, file_conte
         response = requests.put(upload_url, headers=headers_upload, data=file_content)
         return response
     except Exception as e:
-        # Fallback-Response erzeugen bei Absturz
         err_res = requests.Response()
         err_res.status_code = 500
-        err_res._content = f"Interner Verbindungsfehler: {str(e)}".encode("utf-8")
+        err_res._content = f"Verbindungsfehler: {str(e)}".encode("utf-8")
         return err_res
 
 token = get_onedrive_token()
@@ -210,29 +195,26 @@ st.markdown("""
 LOGO_DATEINAME = "pg-finance_Logo.jpg"
 if os.path.exists(LOGO_DATEINAME):
     logo = Image.open(LOGO_DATEINAME)
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns()
     with col2:
         st.image(logo, use_container_width=True)
 
 st.markdown("<h1 class='main-title'>Datenerfassung</h1>", unsafe_allow_html=True)
 st.markdown("<p class='main-subtitle'>Schnell und sicher alle Daten für Ihre Autoversicherung einreichen</p>", unsafe_allow_html=True)
 
-# =========================================================================
-# KORREKTE LIVE-INFOBOX (DIREKT SICHTBAR ZUM ID-ABGLEICH!)
-# =========================================================================
-st.markdown('<div class="form-card"><span class="card-header">🔍 Sicherheits- & ID-Abgleich</span>', unsafe_allow_html=True)
+# === MINIMALISTISCHER ID-ABGLEICH ===
+st.markdown('<div class="form-card"><span class="card-header">🔍 System-Status</span>', unsafe_allow_html=True)
 mask_secret = CLIENT_SECRET[:4] + "..." + CLIENT_SECRET[-4:] if CLIENT_SECRET else "Nicht hinterlegt"
 mask_client = CLIENT_ID[:4] + "..." + CLIENT_ID[-4:] if CLIENT_ID else "Nicht hinterlegt"
 mask_tenant = TENANT_ID[:4] + "..." + TENANT_ID[-4:] if TENANT_ID else "Nicht hinterlegt"
 
 st.info(f"""
-* **Verknüpfter SharePoint-Pfad:** `{USER_PERSONAL_PATH}`
+* **Zielsystem:** `SharePoint Online (Hauptseite)`
 * **Client-ID:** `{mask_client}`
 * **Tenant-ID:** `{mask_tenant}`
-* **Client-Secret:** `{mask_secret}`
+* **Verbindung:** `Aktiv` if token else `Inaktiv`
 """)
 st.markdown('</div>', unsafe_allow_html=True)
-# =========================================================================
 
 # === KARTE 1: PERSÖNLICHE DATEN ===
 st.markdown('<div class="form-card"><span class="card-header">👤 Persönliche Daten</span>', unsafe_allow_html=True)
@@ -255,7 +237,7 @@ with col_col2:
     garage = st.selectbox("Abstellort des Fahrzeugs (Garage) *", ["Einzel-/Doppelgarage", "Tiefgarage", "Carport", "Privatgrundstück (befriedet)", "Straße / Laternenparker"])
 
 st.write("") 
-col_kz1, col_kz2 = st.columns([2, 1])
+col_kz1, col_kz2 = st.columns()
 with col_kz2:
     neufahrzeug = st.checkbox("Neufahrzeug", help="Aktivieren Sie dies, falls das Fahrzeug noch nicht zugelassen ist.")
 with col_kz1:
@@ -322,28 +304,28 @@ Garage: {garage}
         with open(os.path.join(ordner_name, "Kopier_Vorlage.txt"), "w", encoding="utf-8") as f:
             f.write(infotext)
 
-        # === SHAREPOINT/ONEDRIVE HOCHLADEN-PROZESS ===
+        # === ONEDRIVE/SHAREPOINT HOCHLADEN-PROZESS ===
         if token:
-            with st.spinner("Dateien werden sicher auf Ihr OneDrive geladen..."):
-                res1 = upload_file_to_sharepoint_personal(token, ordner_name, "Kopier_Vorlage.txt", infotext.encode("utf-8"))
+            with st.spinner("Dateien werden sicher auf SharePoint übertragen..."):
+                res1 = upload_file_to_sharepoint_root(token, ordner_name, "Kopier_Vorlage.txt", infotext.encode("utf-8"))
                 
                 if res1.status_code in [200, 201]:
                     st.balloons()
-                    st.success("🎉 Übertragung erfolgreich! Alle Daten wurden sicher auf Ihrem OneDrive abgelegt.")
+                    st.success("🎉 Übertragung erfolgreich! Alle Daten wurden sicher auf SharePoint abgelegt.")
                     
-                    # Restliche Dateien nur hochladen, wenn die Verbindung steht und die Vorlage geklappt hat
+                    # Restliche Dateien hochladen
                     if fahrzeugschein:
-                        upload_file_to_sharepoint_personal(token, ordner_name, f"Fahrzeugschein_{fahrzeugschein.name}", fahrzeugschein.getbuffer())
+                        upload_file_to_sharepoint_root(token, ordner_name, f"Fahrzeugschein_{fahrzeugschein.name}", fahrzeugschein.getbuffer())
                     if police:
-                        upload_file_to_sharepoint_personal(token, ordner_name, f"Police_{police.name}", police.getbuffer())
+                        upload_file_to_sharepoint_root(token, ordner_name, f"Police_{police.name}", police.getbuffer())
                     if fs_vorderseite:
-                        upload_file_to_sharepoint_personal(token, ordner_name, f"FS_Vorderseite_{fs_vorderseite.name}", fs_vorderseite.getbuffer())
+                        upload_file_to_sharepoint_root(token, ordner_name, f"FS_Vorderseite_{fs_vorderseite.name}", fs_vorderseite.getbuffer())
                     if fs_rueckseite:
-                        upload_file_to_sharepoint_personal(token, ordner_name, f"FS_Rueckseite_{fs_rueckseite.name}", fs_rueckseite.getbuffer())
+                        upload_file_to_sharepoint_root(token, ordner_name, f"FS_Rueckseite_{fs_rueckseite.name}", fs_rueckseite.getbuffer())
                     if ausweis_vorderseite:
-                        upload_file_to_sharepoint_personal(token, ordner_name, f"Ausweis_Vorderseite_{ausweis_vorderseite.name}", ausweis_vorderseite.getbuffer())
+                        upload_file_to_sharepoint_root(token, ordner_name, f"Ausweis_Vorderseite_{ausweis_vorderseite.name}", ausweis_vorderseite.getbuffer())
                     if ausweis_rueckseite:
-                        upload_file_to_sharepoint_personal(token, ordner_name, f"Ausweis_Rueckseite_{ausweis_rueckseite.name}", ausweis_rueckseite.getbuffer())
+                        upload_file_to_sharepoint_root(token, ordner_name, f"Ausweis_Rueckseite_{ausweis_rueckseite.name}", ausweis_rueckseite.getbuffer())
                 else:
                     st.error(f"❌ Microsoft-Upload fehlgeschlagen. Fehlercode: {res1.status_code}")
                     st.write("Detaillierte Rückmeldung von Microsoft:")
@@ -351,7 +333,7 @@ Garage: {garage}
                     st.warning("⚠️ Die Daten wurden als Sicherheits-Backup lokal auf dem Server gespeichert.")
         else:
             st.balloons()
-            st.success("🎉 Übertragung erfolgreich! (Daten wurden sicher lokal auf dem Server gespeichert, da OneDrive noch keine Verbindung hat).")
+            st.success("🎉 Übertragung erfolgreich! (Daten wurden sicher lokal auf dem Server gespeichert, da SharePoint noch keine Verbindung hat).")
 
         st.write("---")
         st.subheader("📋 Kopierbereich für das Maklerbüro")
