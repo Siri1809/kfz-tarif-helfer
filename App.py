@@ -3,23 +3,20 @@ import os
 import requests
 from PIL import Image
 
-# 1. Seiteneinstellungen (Auf Smartphones optimiert)
+# 1. Seiteneinstellungen
 st.set_page_config(
     page_title="Tarifrechner Helfer - Patrick Grellner Finance", 
     page_icon="🚗", 
     layout="centered"
 )
 
-# === DIE FIRMEN-E-MAIL FÜR IHR ONEDRIVE ===
 USER_EMAIL = "s.seyschab@pg-finance.de"
 
-# === MICROSOFT GRAPH API VERBINDUNG ===
 CLIENT_ID = st.secrets["microsoft"]["client_id"]
 CLIENT_SECRET = st.secrets["microsoft"]["client_secret"]
 TENANT_ID = st.secrets["microsoft"]["tenant_id"]
 
 def get_onedrive_token():
-    """Authentifiziert die App bei Microsoft Graph API."""
     try:
         url = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token"
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
@@ -37,7 +34,6 @@ def get_onedrive_token():
     return None
 
 def upload_file_to_onedrive(token, folder_name, file_name, file_content):
-    """Lädt eine Datei direkt in den Kundenordner auf Simons OneDrive."""
     url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/root:/PG_Finance_Tarifrechner/{folder_name}/{file_name}:/content"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -46,10 +42,9 @@ def upload_file_to_onedrive(token, folder_name, file_name, file_content):
     response = requests.put(url, headers=headers, data=file_content)
     return response
 
-# Token generieren
 token = get_onedrive_token()
 
-# 2. BRANDING CSS (Unverändert)
+# CSS (Unverändert)
 st.markdown("""
     <style>
     .stApp {
@@ -245,7 +240,7 @@ col_id1, col_id2 = st.columns(2)
 with col_id1:
     ausweis_vorderseite = st.file_uploader("Vorderseite / Reisepass-Hauptseite", type=["pdf", "png", "jpg", "jpeg"], key="ausweis_vorn")
 with col_id2:
-        ausweis_rueckseite = st.file_uploader("Rückseite", type=["pdf", "png", "jpg", "jpeg"], key="ausweis_hinten")
+    ausweis_rueckseite = st.file_uploader("Rückseite", type=["pdf", "png", "jpg", "jpeg"], key="ausweis_hinten")
 st.markdown('</div>', unsafe_allow_html=True)
 
 # === DATENSCHUTZ-EINWILLIGUNG ===
@@ -285,18 +280,17 @@ Garage: {garage}
         # === ONEDRIVE HOCHLADEN-PROZESS ===
         if token:
             with st.spinner("Dateien werden sicher auf Ihr OneDrive geladen..."):
-                # Wir fangen die Server-Antworten auf
                 res1 = upload_file_to_onedrive(token, ordner_name, "Kopier_Vorlage.txt", infotext.encode("utf-8"))
                 
-                # Wir lesen aus der ersten Serverantwort die Details aus
                 if res1.status_code in [200, 201]:
-                    res_json = res1.json()
-                    echter_pfad = res_json.get("parentReference", {}).get("path", "Unbekannt")
-                    konto_name = res_json.get("createdBy", {}).get("user", {}).get("displayName", "Unbekannt")
-                    e_mail_ziel = res_json.get("createdBy", {}).get("user", {}).get("email", USER_EMAIL)
-                    web_url = res_json.get("webUrl", "")
+                    st.balloons()
+                    st.success("🎉 Übertragung erfolgreich! Alle Daten wurden sicher auf Ihrem OneDrive abgelegt.")
                 else:
-                    echter_pfad, konto_name, e_mail_ziel, web_url = "Fehler", "Fehler", "Fehler", ""
+                    # KORREKTE FEHLERANALYSE: Schreibt die echte Fehlermeldung von Microsoft aus!
+                    st.error(f"❌ Microsoft-Upload fehlgeschlagen. Fehlercode: {res1.status_code}")
+                    st.write("Detaillierte Rückmeldung von Microsoft:")
+                    st.code(res1.text)
+                    st.warning("⚠️ Die Daten wurden als Sicherheits-Backup lokal auf dem Server gespeichert.")
 
                 # Restliche Dateien hochladen
                 if fahrzeugschein:
@@ -311,22 +305,6 @@ Garage: {garage}
                     upload_file_to_onedrive(token, ordner_name, f"Ausweis_Vorderseite_{ausweis_vorderseite.name}", ausweis_vorderseite.getbuffer())
                 if ausweis_rueckseite:
                     upload_file_to_onedrive(token, ordner_name, f"Ausweis_Rueckseite_{ausweis_rueckseite.name}", ausweis_rueckseite.getbuffer())
-                
-            st.balloons()
-            st.success("🎉 Übertragung erfolgreich!")
-            
-            # === SPEICHERORT-AUSGABE (NUR FÜR SIE SICHTBAR) ===
-            st.write("---")
-            st.subheader("📁 Microsoft OneDrive Empfangs-Bestätigung")
-            st.info(f"Die Dateien wurden von Microsoft erfolgreich empfangen und abgelegt:")
-            st.markdown(f"""
-            * **Ziel-Konto (E-Mail):** `{e_mail_ziel}`
-            * **Name des Kontos:** `{konto_name}`
-            * **Vollständiger Systempfad:** `{echter_pfad}`
-            """)
-            if web_url:
-                st.markdown(f"🔗 **[Klicken Sie hier, um direkt zum Ordner auf OneDrive zu gelangen]({web_url})**")
-            # ===================================================
         else:
             st.balloons()
             st.success("🎉 Übertragung erfolgreich! (Daten wurden sicher lokal auf dem Server gespeichert, da OneDrive noch keine Verbindung hat).")
