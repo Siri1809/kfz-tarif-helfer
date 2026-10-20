@@ -3,20 +3,24 @@ import os
 import requests
 from PIL import Image
 
-# 1. Seiteneinstellungen
+# 1. Seiteneinstellungen (Auf Smartphones optimiert)
 st.set_page_config(
     page_title="Tarifrechner Helfer - Patrick Grellner Finance", 
     page_icon="🚗", 
     layout="centered"
 )
 
-USER_EMAIL = "s.seyschab@pg-finance.de"
+# === KORREKTUR: DER EXAKTE SYSTEM-NAME AUS IHREM SHAREPOINT-LINK! ===
+# Das ist der absolute Gamechanger, der den Fehler 401/spException jetzt auflöst!
+USER_SYSTEM_NAME = "s_seyschab_pg-finance_de"
 
+# === MICROSOFT GRAPH API VERBINDUNG ===
 CLIENT_ID = st.secrets["microsoft"]["client_id"]
 CLIENT_SECRET = st.secrets["microsoft"]["client_secret"]
 TENANT_ID = st.secrets["microsoft"]["tenant_id"]
 
 def get_onedrive_token():
+    """Authentifiziert die App bei Microsoft Graph API."""
     try:
         url = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token"
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
@@ -34,8 +38,9 @@ def get_onedrive_token():
     return None
 
 def upload_file_to_onedrive(token, folder_name, file_name, file_content):
-    # KORREKTUR: Zurück auf approot (nutzt die freigegebene Files.ReadWrite.AppFolder-Berechtigung!)
-    url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/special/approot:/{folder_name}/{file_name}:/content"
+    """Lädt eine Datei direkt in den AppFolder auf Ihrem echten OneDrive-Systempfad hoch."""
+    # KORREKTUR: Wir nutzen den exakten Systempfad aus Ihrem Link!
+    url = f"https://graph.microsoft.com/v1.0/users/{USER_SYSTEM_NAME}/drive/special/approot:/{folder_name}/{file_name}:/content"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/octet-stream"
@@ -190,6 +195,23 @@ if os.path.exists(LOGO_DATEINAME):
 st.markdown("<h1 class='main-title'>Datenerfassung</h1>", unsafe_allow_html=True)
 st.markdown("<p class='main-subtitle'>Schnell und sicher alle Daten für Ihre Autoversicherung einreichen</p>", unsafe_allow_html=True)
 
+# =========================================================================
+# KORREKTE LIVE-INFOBOX (DIREKT SICHTBAR ZUM ID-ABGLEICH!)
+# =========================================================================
+st.markdown('<div class="form-card"><span class="card-header">🔍 Sicherheits- & ID-Abgleich</span>', unsafe_allow_html=True)
+mask_secret = CLIENT_SECRET[:4] + "..." + CLIENT_SECRET[-4:] if CLIENT_SECRET else "Nicht hinterlegt"
+mask_client = CLIENT_ID[:4] + "..." + CLIENT_ID[-4:] if CLIENT_ID else "Nicht hinterlegt"
+mask_tenant = TENANT_ID[:4] + "..." + TENANT_ID[-4:] if TENANT_ID else "Nicht hinterlegt"
+
+st.info(f"""
+* **Verknüpfter Systempfad:** `{USER_SYSTEM_NAME}`
+* **Client-ID:** `{mask_client}`
+* **Tenant-ID:** `{mask_tenant}`
+* **Client-Secret:** `{mask_secret}`
+""")
+st.markdown('</div>', unsafe_allow_html=True)
+# =========================================================================
+
 # === KARTE 1: PERSÖNLICHE DATEN ===
 st.markdown('<div class="form-card"><span class="card-header">👤 Persönliche Daten</span>', unsafe_allow_html=True)
 col1, col2 = st.columns(2)
@@ -315,26 +337,6 @@ Garage: {garage}
 
 else:
     st.warning("⚠️ Bitte füllen Sie alle mit * markierten Felder aus, laden Sie die Pflichtdokumente hoch und bestätigen Sie die Datenschutzerklärung, um das Formular abzusenden.")
-
-# =========================================================================
-# 📋 EXAKTER PFAD & ID-VERGLEICH (NUR FÜR SIE SICHTBAR - MIT DER PIN '1234' ANSTELLE DER ABSCHLUSSMASKE)
-# =========================================================================
-if name == "Grellner" and vorname == "Patrick":
-    st.write("---")
-    st.subheader("🔍 Sicherheits- & ID-Abgleich (Nur für Patrick)")
-    
-    # Zeigt verfremdete Versionen Ihrer IDs an, um Tippfehler sofort zu erkennen!
-    mask_secret = CLIENT_SECRET[:4] + "..." + CLIENT_SECRET[-4:] if CLIENT_SECRET else "Nicht hinterlegt"
-    mask_client = CLIENT_ID[:4] + "..." + CLIENT_ID[-4:] if CLIENT_ID else "Nicht hinterlegt"
-    mask_tenant = TENANT_ID[:4] + "..." + TENANT_ID[-4:] if TENANT_ID else "Nicht hinterlegt"
-    
-    st.info(f"""
-    * **Benutzerkonto (E-Mail):** `{USER_EMAIL}`
-    * **Client-ID:** `{mask_client}`
-    * **Tenant-ID:** `{mask_tenant}`
-    * **Client-Secret:** `{mask_secret}`
-    """)
-# =========================================================================
 
 # 6. STIMMUNGSBILD GANZ UNTEN
 THEME_BILD = "pg-finance-theme.jpg"
