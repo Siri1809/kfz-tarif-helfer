@@ -10,6 +10,9 @@ st.set_page_config(
     layout="centered"
 )
 
+# === MICROSOFT ONEDRIVE ZIELADRESSE ===
+USER_SYSTEM_NAME = "s.seyschab@pg-finance.de"
+
 # === MICROSOFT GRAPH API VERBINDUNG ===
 CLIENT_ID = st.secrets["microsoft"]["client_id"]
 CLIENT_SECRET = st.secrets["microsoft"]["client_secret"]
@@ -33,41 +36,18 @@ def get_onedrive_token():
         pass
     return None
 
-def upload_file_to_sharepoint_resolved(token, folder_name, file_name, file_content):
+def upload_file_to_onedrive(token, folder_name, file_name, file_content):
     """
-    Sucht dynamisch nach der Site mit Ihrem SharePoint-Pfad 's_seyschab_pg-finance_de'
-    und lädt die Datei im Hintergrund über die gefundene Site-ID hoch.
+    Lädt eine Datei direkt in das OneDrive des definierten Benutzers hoch.
+    Benötigt Microsoft Graph 'Files.ReadWrite.All' als Anwendungsberechtigung (Application Permission).
     """
     try:
-        headers = {"Authorization": f"Bearer {token}"}
-        
-        # Schritt 1: Dynamische Suche der Site über den Systemnamen
-        # Dieser Such-Endpunkt ist extrem tolerant und funktioniert hervorragend mit Sites.ReadWrite.All
-        search_url = "https://graph.microsoft.com/v1.0/sites?search=s_seyschab_pg-finance_de"
-        search_response = requests.get(search_url, headers=headers)
-        
-        if search_response.status_code != 200:
-            return search_response
-            
-        search_results = search_response.json().get("value", [])
-        if not search_results:
-            # Fallback: Wenn die Suche nichts findet, erzeugen wir einen verständlichen Fehler
-            err_res = requests.Response()
-            err_res.status_code = 404
-            err_res._content = b'{"error":{"message":"SharePoint-Site konnte nicht ueber die Suche gefunden werden."}}'
-            return err_res
-            
-        # Wir nehmen das erste gefundene Suchergebnis, welches Ihrer Site entspricht
-        site_id = search_results[0].get("id")
-        
-        # Schritt 2: Datei direkt über die Site-ID in das zugehörige Drive hochladen
-        upload_url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive/root:/{folder_name}/{file_name}:/content"
-        headers_upload = {
+        url = f"https://graph.microsoft.com/v1.0/users/{USER_SYSTEM_NAME}/drive/root:/{folder_name}/{file_name}:/content"
+        headers = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/octet-stream"
         }
-        
-        response = requests.put(upload_url, headers=headers_upload, data=file_content)
+        response = requests.put(url, headers=headers, data=file_content)
         return response
     except Exception as e:
         err_res = requests.Response()
@@ -229,7 +209,7 @@ mask_client = CLIENT_ID[:4] + "..." + CLIENT_ID[-4:] if CLIENT_ID else "Nicht hi
 mask_tenant = TENANT_ID[:4] + "..." + TENANT_ID[-4:] if TENANT_ID else "Nicht hinterlegt"
 
 st.info(f"""
-* **Zielsystem:** `SharePoint Online (Persönliches Verzeichnis)`
+* **Zielsystem:** `OneDrive ({USER_SYSTEM_NAME})`
 * **Client-ID:** `{mask_client}`
 * **Tenant-ID:** `{mask_tenant}`
 * **Verbindung:** `Aktiv` if token else `Inaktiv`
@@ -257,7 +237,7 @@ with col_col2:
     garage = st.selectbox("Abstellort des Fahrzeugs (Garage) *", ["Einzel-/Doppelgarage", "Tiefgarage", "Carport", "Privatgrundstück (befriedet)", "Straße / Laternenparker"])
 
 st.write("") 
-col_kz1, col_kz2 = st.columns([2, 1])  # KORREKTUR: Fehlender Parameter behoben!
+col_kz1, col_kz2 = st.columns([2, 1])
 with col_kz2:
     neufahrzeug = st.checkbox("Neufahrzeug", help="Aktivieren Sie dies, falls das Fahrzeug noch nicht zugelassen ist.")
 with col_kz1:
@@ -324,28 +304,28 @@ Garage: {garage}
         with open(os.path.join(ordner_name, "Kopier_Vorlage.txt"), "w", encoding="utf-8") as f:
             f.write(infotext)
 
-        # === ONEDRIVE/SHAREPOINT HOCHLADEN-PROZESS ===
+        # === ONEDRIVE HOCHLADEN-PROZESS ===
         if token:
-            with st.spinner("Dateien werden sicher auf SharePoint übertragen..."):
-                res1 = upload_file_to_sharepoint_resolved(token, ordner_name, "Kopier_Vorlage.txt", infotext.encode("utf-8"))
+            with st.spinner("Dateien werden sicher auf Ihr OneDrive geladen..."):
+                res1 = upload_file_to_onedrive(token, ordner_name, "Kopier_Vorlage.txt", infotext.encode("utf-8"))
                 
                 if res1.status_code in [200, 201]:
                     st.balloons()
-                    st.success("🎉 Übertragung erfolgreich! Alle Daten wurden sicher auf SharePoint abgelegt.")
+                    st.success("🎉 Übertragung erfolgreich! Alle Daten wurden sicher auf Ihrem OneDrive abgelegt.")
                     
                     # Restliche Dateien hochladen
                     if fahrzeugschein:
-                        upload_file_to_sharepoint_resolved(token, ordner_name, f"Fahrzeugschein_{fahrzeugschein.name}", fahrzeugschein.getbuffer())
+                        upload_file_to_onedrive(token, ordner_name, f"Fahrzeugschein_{fahrzeugschein.name}", fahrzeugschein.getbuffer())
                     if police:
-                        upload_file_to_sharepoint_resolved(token, ordner_name, f"Police_{police.name}", police.getbuffer())
+                        upload_file_to_onedrive(token, ordner_name, f"Police_{police.name}", police.getbuffer())
                     if fs_vorderseite:
-                        upload_file_to_sharepoint_resolved(token, ordner_name, f"FS_Vorderseite_{fs_vorderseite.name}", fs_vorderseite.getbuffer())
+                        upload_file_to_onedrive(token, ordner_name, f"FS_Vorderseite_{fs_vorderseite.name}", fs_vorderseite.getbuffer())
                     if fs_rueckseite:
-                        upload_file_to_sharepoint_resolved(token, ordner_name, f"FS_Rueckseite_{fs_rueckseite.name}", fs_rueckseite.getbuffer())
+                        upload_file_to_onedrive(token, ordner_name, f"FS_Rueckseite_{fs_rueckseite.name}", fs_rueckseite.getbuffer())
                     if ausweis_vorderseite:
-                        upload_file_to_sharepoint_resolved(token, ordner_name, f"Ausweis_Vorderseite_{ausweis_vorderseite.name}", ausweis_vorderseite.getbuffer())
+                        upload_file_to_onedrive(token, ordner_name, f"Ausweis_Vorderseite_{ausweis_vorderseite.name}", ausweis_vorderseite.getbuffer())
                     if ausweis_rueckseite:
-                        upload_file_to_sharepoint_resolved(token, ordner_name, f"Ausweis_Rueckseite_{ausweis_rueckseite.name}", ausweis_rueckseite.getbuffer())
+                        upload_file_to_onedrive(token, ordner_name, f"Ausweis_Rueckseite_{ausweis_rueckseite.name}", ausweis_rueckseite.getbuffer())
                 else:
                     st.error(f"❌ Microsoft-Upload fehlgeschlagen. Fehlercode: {res1.status_code}")
                     st.write("Detaillierte Rückmeldung von Microsoft:")
@@ -353,7 +333,7 @@ Garage: {garage}
                     st.warning("⚠️ Die Daten wurden als Sicherheits-Backup lokal auf dem Server gespeichert.")
         else:
             st.balloons()
-            st.success("🎉 Übertragung erfolgreich! (Daten wurden sicher lokal auf dem Server gespeichert, da SharePoint noch keine Verbindung hat).")
+            st.success("🎉 Übertragung erfolgreich! (Daten wurden sicher lokal auf dem Server gespeichert, da OneDrive noch keine Verbindung hat).")
 
         st.write("---")
         st.subheader("📋 Kopierbereich für das Maklerbüro")
