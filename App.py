@@ -36,7 +36,7 @@ def get_onedrive_token():
 def upload_file_to_sharepoint_root(token, folder_name, file_name, file_content):
     """
     Lädt Dateien direkt in die Standard-Dokumentenbibliothek der Haupt-SharePoint-Seite (root-site) hoch.
-    Dies umgeht den spException-Fehler des persönlichen OneDrive-Ptofs im App-only-Modus.
+    Dies umgeht den spException-Fehler des persönlichen OneDrive-Pfads im App-only-Modus.
     """
     try:
         # Wir nutzen die Root-Site, da diese bei jedem M365 Business Tenant standardmäßig aktiv ist
@@ -195,7 +195,7 @@ st.markdown("""
 LOGO_DATEINAME = "pg-finance_Logo.jpg"
 if os.path.exists(LOGO_DATEINAME):
     logo = Image.open(LOGO_DATEINAME)
-    col1, col2, col3 = st.columns()
+    col1, col2, col3 = st.columns(3)  # KORREKTUR: Anzahl der Spalten explizit angegeben
     with col2:
         st.image(logo, use_container_width=True)
 
@@ -237,7 +237,7 @@ with col_col2:
     garage = st.selectbox("Abstellort des Fahrzeugs (Garage) *", ["Einzel-/Doppelgarage", "Tiefgarage", "Carport", "Privatgrundstück (befriedet)", "Straße / Laternenparker"])
 
 st.write("") 
-col_kz1, col_kz2 = st.columns()
+col_kz1, col_kz2 = st.columns([2, 1])  # KORREKTUR: Verhältnis übergeben
 with col_kz2:
     neufahrzeug = st.checkbox("Neufahrzeug", help="Aktivieren Sie dies, falls das Fahrzeug noch nicht zugelassen ist.")
 with col_kz1:
