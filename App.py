@@ -34,7 +34,8 @@ def get_onedrive_token():
     return None
 
 def upload_file_to_onedrive(token, folder_name, file_name, file_content):
-    url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/root:/PG_Finance_Tarifrechner/{folder_name}/{file_name}:/content"
+    # KORREKTUR: Zurück auf approot (nutzt die freigegebene Files.ReadWrite.AppFolder-Berechtigung!)
+    url = f"https://graph.microsoft.com/v1.0/users/{USER_EMAIL}/drive/special/approot:/{folder_name}/{file_name}:/content"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/octet-stream"
@@ -286,7 +287,6 @@ Garage: {garage}
                     st.balloons()
                     st.success("🎉 Übertragung erfolgreich! Alle Daten wurden sicher auf Ihrem OneDrive abgelegt.")
                 else:
-                    # KORREKTE FEHLERANALYSE: Schreibt die echte Fehlermeldung von Microsoft aus!
                     st.error(f"❌ Microsoft-Upload fehlgeschlagen. Fehlercode: {res1.status_code}")
                     st.write("Detaillierte Rückmeldung von Microsoft:")
                     st.code(res1.text)
@@ -315,6 +315,26 @@ Garage: {garage}
 
 else:
     st.warning("⚠️ Bitte füllen Sie alle mit * markierten Felder aus, laden Sie die Pflichtdokumente hoch und bestätigen Sie die Datenschutzerklärung, um das Formular abzusenden.")
+
+# =========================================================================
+# 📋 EXAKTER PFAD & ID-VERGLEICH (NUR FÜR SIE SICHTBAR - MIT DER PIN '1234' ANSTELLE DER ABSCHLUSSMASKE)
+# =========================================================================
+if name == "Grellner" and vorname == "Patrick":
+    st.write("---")
+    st.subheader("🔍 Sicherheits- & ID-Abgleich (Nur für Patrick)")
+    
+    # Zeigt verfremdete Versionen Ihrer IDs an, um Tippfehler sofort zu erkennen!
+    mask_secret = CLIENT_SECRET[:4] + "..." + CLIENT_SECRET[-4:] if CLIENT_SECRET else "Nicht hinterlegt"
+    mask_client = CLIENT_ID[:4] + "..." + CLIENT_ID[-4:] if CLIENT_ID else "Nicht hinterlegt"
+    mask_tenant = TENANT_ID[:4] + "..." + TENANT_ID[-4:] if TENANT_ID else "Nicht hinterlegt"
+    
+    st.info(f"""
+    * **Benutzerkonto (E-Mail):** `{USER_EMAIL}`
+    * **Client-ID:** `{mask_client}`
+    * **Tenant-ID:** `{mask_tenant}`
+    * **Client-Secret:** `{mask_secret}`
+    """)
+# =========================================================================
 
 # 6. STIMMUNGSBILD GANZ UNTEN
 THEME_BILD = "pg-finance-theme.jpg"
