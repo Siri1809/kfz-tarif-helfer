@@ -257,7 +257,7 @@ with col_col2:
     garage = st.selectbox("Abstellort des Fahrzeugs (Garage) *", ["Einzel-/Doppelgarage", "Tiefgarage", "Carport", "Privatgrundstück (befriedet)", "Straße / Laternenparker"])
 
 st.write("") 
-col_kz1, col_kz2 = st.columns()
+col_kz1, col_kz2 = st.columns([2, 1])  # KORREKTUR: Fehlender Parameter behoben!
 with col_kz2:
     neufahrzeug = st.checkbox("Neufahrzeug", help="Aktivieren Sie dies, falls das Fahrzeug noch nicht zugelassen ist.")
 with col_kz1:
