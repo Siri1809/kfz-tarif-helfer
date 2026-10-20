@@ -33,15 +33,35 @@ def get_onedrive_token():
         pass
     return None
 
-def upload_file_to_sharepoint_root(token, folder_name, file_name, file_content):
+def upload_file_to_sharepoint_resolved(token, folder_name, file_name, file_content):
     """
-    Lädt Dateien direkt in die Standard-Dokumentenbibliothek der Haupt-SharePoint-Seite (root-site) hoch.
-    Dies umgeht den spException-Fehler des persönlichen OneDrive-Pfads im App-only-Modus.
+    Sucht dynamisch nach der Site mit Ihrem SharePoint-Pfad 's_seyschab_pg-finance_de'
+    und lädt die Datei im Hintergrund über die gefundene Site-ID hoch.
     """
     try:
-        # Wir nutzen die Root-Site, da diese bei jedem M365 Business Tenant standardmäßig aktiv ist
-        upload_url = f"https://graph.microsoft.com/v1.0/sites/root/drive/root:/{folder_name}/{file_name}:/content"
+        headers = {"Authorization": f"Bearer {token}"}
         
+        # Schritt 1: Dynamische Suche der Site über den Systemnamen
+        # Dieser Such-Endpunkt ist extrem tolerant und funktioniert hervorragend mit Sites.ReadWrite.All
+        search_url = "https://graph.microsoft.com/v1.0/sites?search=s_seyschab_pg-finance_de"
+        search_response = requests.get(search_url, headers=headers)
+        
+        if search_response.status_code != 200:
+            return search_response
+            
+        search_results = search_response.json().get("value", [])
+        if not search_results:
+            # Fallback: Wenn die Suche nichts findet, erzeugen wir einen verständlichen Fehler
+            err_res = requests.Response()
+            err_res.status_code = 404
+            err_res._content = b'{"error":{"message":"SharePoint-Site konnte nicht ueber die Suche gefunden werden."}}'
+            return err_res
+            
+        # Wir nehmen das erste gefundene Suchergebnis, welches Ihrer Site entspricht
+        site_id = search_results[0].get("id")
+        
+        # Schritt 2: Datei direkt über die Site-ID in das zugehörige Drive hochladen
+        upload_url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive/root:/{folder_name}/{file_name}:/content"
         headers_upload = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/octet-stream"
@@ -195,21 +215,21 @@ st.markdown("""
 LOGO_DATEINAME = "pg-finance_Logo.jpg"
 if os.path.exists(LOGO_DATEINAME):
     logo = Image.open(LOGO_DATEINAME)
-    col1, col2, col3 = st.columns(3)  # KORREKTUR: Anzahl der Spalten explizit angegeben
+    col1, col2, col3 = st.columns(3)
     with col2:
         st.image(logo, use_container_width=True)
 
 st.markdown("<h1 class='main-title'>Datenerfassung</h1>", unsafe_allow_html=True)
 st.markdown("<p class='main-subtitle'>Schnell und sicher alle Daten für Ihre Autoversicherung einreichen</p>", unsafe_allow_html=True)
 
-# === MINIMALISTISCHER ID-ABGLEICH ===
+# === LIVE-INFOBOX ===
 st.markdown('<div class="form-card"><span class="card-header">🔍 System-Status</span>', unsafe_allow_html=True)
 mask_secret = CLIENT_SECRET[:4] + "..." + CLIENT_SECRET[-4:] if CLIENT_SECRET else "Nicht hinterlegt"
 mask_client = CLIENT_ID[:4] + "..." + CLIENT_ID[-4:] if CLIENT_ID else "Nicht hinterlegt"
 mask_tenant = TENANT_ID[:4] + "..." + TENANT_ID[-4:] if TENANT_ID else "Nicht hinterlegt"
 
 st.info(f"""
-* **Zielsystem:** `SharePoint Online (Hauptseite)`
+* **Zielsystem:** `SharePoint Online (Persönliches Verzeichnis)`
 * **Client-ID:** `{mask_client}`
 * **Tenant-ID:** `{mask_tenant}`
 * **Verbindung:** `Aktiv` if token else `Inaktiv`
@@ -237,7 +257,7 @@ with col_col2:
     garage = st.selectbox("Abstellort des Fahrzeugs (Garage) *", ["Einzel-/Doppelgarage", "Tiefgarage", "Carport", "Privatgrundstück (befriedet)", "Straße / Laternenparker"])
 
 st.write("") 
-col_kz1, col_kz2 = st.columns([2, 1])  # KORREKTUR: Verhältnis übergeben
+col_kz1, col_kz2 = st.columns()
 with col_kz2:
     neufahrzeug = st.checkbox("Neufahrzeug", help="Aktivieren Sie dies, falls das Fahrzeug noch nicht zugelassen ist.")
 with col_kz1:
@@ -307,7 +327,7 @@ Garage: {garage}
         # === ONEDRIVE/SHAREPOINT HOCHLADEN-PROZESS ===
         if token:
             with st.spinner("Dateien werden sicher auf SharePoint übertragen..."):
-                res1 = upload_file_to_sharepoint_root(token, ordner_name, "Kopier_Vorlage.txt", infotext.encode("utf-8"))
+                res1 = upload_file_to_sharepoint_resolved(token, ordner_name, "Kopier_Vorlage.txt", infotext.encode("utf-8"))
                 
                 if res1.status_code in [200, 201]:
                     st.balloons()
@@ -315,17 +335,17 @@ Garage: {garage}
                     
                     # Restliche Dateien hochladen
                     if fahrzeugschein:
-                        upload_file_to_sharepoint_root(token, ordner_name, f"Fahrzeugschein_{fahrzeugschein.name}", fahrzeugschein.getbuffer())
+                        upload_file_to_sharepoint_resolved(token, ordner_name, f"Fahrzeugschein_{fahrzeugschein.name}", fahrzeugschein.getbuffer())
                     if police:
-                        upload_file_to_sharepoint_root(token, ordner_name, f"Police_{police.name}", police.getbuffer())
+                        upload_file_to_sharepoint_resolved(token, ordner_name, f"Police_{police.name}", police.getbuffer())
                     if fs_vorderseite:
-                        upload_file_to_sharepoint_root(token, ordner_name, f"FS_Vorderseite_{fs_vorderseite.name}", fs_vorderseite.getbuffer())
+                        upload_file_to_sharepoint_resolved(token, ordner_name, f"FS_Vorderseite_{fs_vorderseite.name}", fs_vorderseite.getbuffer())
                     if fs_rueckseite:
-                        upload_file_to_sharepoint_root(token, ordner_name, f"FS_Rueckseite_{fs_rueckseite.name}", fs_rueckseite.getbuffer())
+                        upload_file_to_sharepoint_resolved(token, ordner_name, f"FS_Rueckseite_{fs_rueckseite.name}", fs_rueckseite.getbuffer())
                     if ausweis_vorderseite:
-                        upload_file_to_sharepoint_root(token, ordner_name, f"Ausweis_Vorderseite_{ausweis_vorderseite.name}", ausweis_vorderseite.getbuffer())
+                        upload_file_to_sharepoint_resolved(token, ordner_name, f"Ausweis_Vorderseite_{ausweis_vorderseite.name}", ausweis_vorderseite.getbuffer())
                     if ausweis_rueckseite:
-                        upload_file_to_sharepoint_root(token, ordner_name, f"Ausweis_Rueckseite_{ausweis_rueckseite.name}", ausweis_rueckseite.getbuffer())
+                        upload_file_to_sharepoint_resolved(token, ordner_name, f"Ausweis_Rueckseite_{ausweis_rueckseite.name}", ausweis_rueckseite.getbuffer())
                 else:
                     st.error(f"❌ Microsoft-Upload fehlgeschlagen. Fehlercode: {res1.status_code}")
                     st.write("Detaillierte Rückmeldung von Microsoft:")
